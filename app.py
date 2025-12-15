@@ -6,179 +6,182 @@ import random
 import itertools
 from collections import Counter, defaultdict
 import numpy as np
-import altair as alt 
+import altair as alt
 
 # ---------------------------------------------------------
 # 1. ตั้งค่าหน้าเว็บ & ระบบนำทาง
 # ---------------------------------------------------------
-st.set_page_config(layout="wide", page_title="Lotto Master V.GodFix")
+st.set_page_config(layout="wide", page_title="Lotto Master V.Final")
 
+# ย้าย "ห้องแห่งความลับ" ไปไว้ล่างสุดตามคำขอ
 ALL_PAGES = [
-    "🏠 หน้าแรก (4 สูตรมหาประลัย)", 
+    "🏠 หน้าแรก (6 สูตรมหาประลัย)", 
+    "🧪 ห้องวิจัยสูตร (Formula Lab)",
     "🔍 นักสืบตัวเลข", 
     "🧬 สูตรลับ 5 ชั้น (AI Spin)", 
     "💖 รวมสูตรน้องพารวย", 
     "🎣 สูตรฟันปลา & สามเหลี่ยม", 
-    "💀 โซนเลขดับ (Killer Zone)"
+    "💀 โซนเลขดับ (Killer Zone)",
+    "🔑 ห้องแห่งความลับ (Secret Chamber)"
 ]
 
 if 'current_page' not in st.session_state:
     st.session_state.current_page = ALL_PAGES[0]
+
+# ตัวแปรเช็คสถานะการปลดล็อคห้องลับ
+if 'secret_unlocked' not in st.session_state:
+    st.session_state.secret_unlocked = False
 
 def navigate_to(page_name):
     st.session_state.current_page = page_name
     st.rerun()
 
 # ---------------------------------------------------------
-# 2. CSS Style (แก้ไขเรื่องตัวหนังสือทับกันเรียบร้อย!)
+# 2. CSS Style (Ultimate Jeung Edition ✨)
 # ---------------------------------------------------------
 custom_css = """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;900&display=swap');
 
-/* Global Font - แก้ไขไม่ให้กระทบโครงสร้างภายใน */
-html, body, [class*="css"] {
-    font-family: 'Kanit', sans-serif;
-}
-
-/* ปรับแต่งหัวข้อ Expander ให้ชัดเจน ไม่ทับกัน */
-.streamlit-expanderHeader {
-    font-family: 'Kanit', sans-serif !important;
-    font-weight: bold !important;
-    font-size: 16px !important;
-    background-color: #2e2e2e;
-    border-radius: 8px;
-    color: #FFD700 !important;
-}
+html, body, [class*="css"] { font-family: 'Kanit', sans-serif !important; }
 
 /* --- HERO SECTION --- */
 .hero-container {
     background: radial-gradient(circle at center, #2b2b2b 0%, #1a1a1a 100%);
-    border: 2px solid #444;
-    border-radius: 20px;
-    padding: 30px;
-    text-align: center;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    margin-bottom: 25px;
-    position: relative;
-    overflow: hidden;
-}
-.hero-container::before {
-    content: '';
-    position: absolute;
-    top: -50%; left: -50%; width: 200%; height: 200%;
-    background: radial-gradient(circle, rgba(255,215,0,0.1) 0%, transparent 60%);
-    animation: shine 10s infinite linear;
-}
-@keyframes shine { from {transform: rotate(0deg);} to {transform: rotate(360deg);} }
-
-.hero-title {
-    color: #AAA;
-    font-size: 18px;
-    letter-spacing: 2px;
-    margin-bottom: 10px;
-    text-transform: uppercase;
+    border: 2px solid #FFD700; border-radius: 20px; padding: 20px; text-align: center;
+    box-shadow: 0 0 30px rgba(255, 215, 0, 0.2); margin-bottom: 25px;
 }
 .hero-number {
-    font-size: 90px;
-    font-weight: 900;
-    line-height: 1;
+    font-size: clamp(40px, 8vw, 90px); font-weight: 900; 
     background: linear-gradient(to bottom, #FFF8DC 0%, #FFD700 50%, #DAA520 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));
-    margin-bottom: 15px;
-}
-.hero-sub-grid {
-    display: flex;
-    justify-content: center;
-    gap: 30px;
-    margin-top: 10px;
-}
-.hero-sub-item {
-    background: rgba(255,255,255,0.05);
-    padding: 10px 20px;
-    border-radius: 10px;
-    border: 1px solid #333;
-}
-.hero-sub-label { color: #888; font-size: 14px; }
-.hero-sub-val { color: #FFF; font-size: 24px; font-weight: bold; }
-
-/* --- FORMULA CARDS --- */
-.formula-card-home { 
-    background-color: #222; 
-    padding: 15px; 
-    margin-bottom: 10px; 
-    border-radius: 12px; 
-    border: 1px solid #333; 
-    text-align: left;
-    transition: all 0.3s;
-    position: relative;
-}
-.formula-card-home:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); border-color: #555; }
-.f-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 8px; }
-.f-title { font-weight: bold; font-size: 18px; }
-.f-stats-badge { background: #111; color: #aaa; font-size: 10px; padding: 2px 6px; border-radius: 4px; border: 1px solid #333; }
-.f-row { display: flex; align-items: center; margin-bottom: 5px; }
-.f-label { font-size: 12px; color: #888; width: 60px; }
-
-.f-val-badge { 
-    background-color: #000; 
-    color: #ccc; 
-    padding: 2px 8px; 
-    border-radius: 4px; 
-    font-weight: normal; 
-    font-size: 12px; 
-    border: 1px solid #444;
-    margin-right: 4px;
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.8)); margin: 10px 0;
 }
 
+/* --- CARDS (Used Everywhere) --- */
+.formula-card-home, .lab-card, .fp-card, .secret-card { 
+    background: linear-gradient(145deg, #222, #181818); 
+    padding: 20px; margin-bottom: 20px; border-radius: 15px; border: 1px solid #444; 
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4); transition: all 0.3s;
+}
+.formula-card-home:hover, .lab-card:hover, .fp-card:hover, .secret-card:hover { 
+    transform: translateY(-3px); border-color: #FFD700; 
+    box-shadow: 0 10px 25px rgba(255, 215, 0, 0.15); 
+}
+
+/* --- TEXT & HEADERS --- */
+.f-header, .lab-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 10px; }
+.f-title, .lab-title { font-weight: 900; font-size: 20px; margin: 0; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+.f-stats-badge { background: #333; color: #ccc; font-size: 12px; padding: 4px 10px; border-radius: 8px; border: 1px solid #555; }
+.lab-result-chk { font-weight: bold; font-size: 14px; background: #333; padding: 4px 10px; border-radius: 20px; border: 1px solid #555; }
+
+/* --- BIG GOLD BOX (The "Jeung" Box) --- */
 .f-pair-box {
-    margin-top: 8px;
-    background-color: rgba(255, 215, 0, 0.05);
-    padding: 10px;
-    border-radius: 8px;
-    color: #FFD700;
-    font-weight: 900;
-    font-size: 28px; 
-    text-align: center;
-    border: 1px dashed #555;
-    letter-spacing: 2px;
+    margin-top: 15px;
+    background: linear-gradient(135deg, #000000 0%, #2c3e50 100%);
+    padding: 15px; border-radius: 12px;
+    color: #FFD700; font-weight: 900; font-size: 36px; line-height: 1.2;
+    text-align: center; border: 1px solid #666; letter-spacing: 2px;
+    text-shadow: 3px 3px 0px #000; box-shadow: inset 0 0 40px rgba(0,0,0,0.8);
 }
 
-/* --- SIDEBAR STATS --- */
+/* --- LAB SPECIFIC --- */
+.lab-eq { 
+    font-family: 'Courier New', monospace; font-size: 13px; color: #00FF7F; 
+    background: #000; padding: 8px 12px; border-radius: 6px; margin-bottom: 8px; 
+    border-left: 3px solid #00FF7F; overflow-x: auto; white-space: nowrap; 
+}
+.lab-res-box { 
+    display: flex; gap: 15px; align-items: center; margin: 20px 0; 
+    background: #252525; padding: 15px; border-radius: 12px; border: 1px dashed #444; justify-content: center;
+}
+.lab-digit { 
+    font-size: 36px; font-weight: 900; color: #FFD700; 
+    background: linear-gradient(135deg, #000, #222); 
+    padding: 5px 20px; border-radius: 8px; border: 1px solid #FFD700; 
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+.lab-pairs-container { 
+    margin-top: 15px; line-height: 2.5; text-align: center; background: #151515; padding: 15px; border-radius: 10px; border: 1px solid #333;
+}
+.lab-item-normal { font-size: 22px; color: #888; margin: 0 8px; font-weight: bold; display: inline-block; }
+.lab-item-hit { 
+    font-size: 32px; font-weight: 900; color: #000 !important; 
+    background: linear-gradient(135deg, #00FF7F, #00CC66); 
+    padding: 5px 15px; border-radius: 8px; box-shadow: 0 0 20px rgba(0, 255, 127, 0.6); 
+    margin: 0 8px; display: inline-block; border: 2px solid #fff; 
+}
+
+/* --- BADGES --- */
+.f-val-badge { background-color: #333; color: #fff; padding: 3px 12px; border-radius: 12px; font-size: 16px; margin-right: 5px; border: 1px solid #555; font-weight: bold; }
+.rank-badge { position: absolute; top: -10px; right: -5px; padding: 5px 15px; font-size: 14px; border-radius: 20px; font-weight: 900; z-index: 10; border: 2px solid #222; text-transform: uppercase; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+.rank-1 { background: linear-gradient(135deg, #FFD700, #FDB931); color: #000; }
+.rank-2 { background: linear-gradient(135deg, #E0E0E0, #B0B0B0); color: #000; }
+.rank-3 { background: linear-gradient(135deg, #cd7f32, #b87333); color: #FFF; }
+
+/* --- PYRAMID & BALLS --- */
+.pyramid-container { 
+    display: flex; flex-direction: column; align-items: center; justify-content: center; 
+    padding: 30px; background: radial-gradient(circle, #2e2e2e 0%, #1a1a1a 100%); 
+    border-radius: 20px; margin-top: 15px; border: 1px solid #444;
+}
+.pyramid-row { display: flex; justify-content: center; margin-bottom: 8px; }
+.pyramid-ball { 
+    width: 55px; height: 55px; line-height: 55px; border-radius: 50%; 
+    background: radial-gradient(circle at 30% 30%, #ffffff, #d4af37); color: #222; 
+    font-size: 26px; font-weight: 900; text-align: center; margin: 0 6px; 
+    border: 3px solid #b8860b; box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    text-shadow: 1px 1px 0px rgba(255,255,255,0.5); transition: transform 0.2s;
+}
+.pyramid-ball:hover { transform: scale(1.1); }
+.pyramid-ball.result { 
+    width: 90px; height: 90px; line-height: 85px; font-size: 48px; 
+    background: radial-gradient(circle at 30% 30%, #00FF7F, #006400); 
+    border: 4px solid #fff; box-shadow: 0 0 30px #00FF7F; color: #fff;
+    text-shadow: 0 2px 5px rgba(0,0,0,0.5);
+}
+.connector-line { color: #666; font-size: 14px; margin: -5px 0 5px 0; text-shadow: 0 1px 1px #000; }
+
+/* --- KILLER BOX & CONSENSUS --- */
+.consensus-box { 
+    background: linear-gradient(135deg, #3b0000 0%, #1a0000 100%); 
+    border: 2px solid #FF4444; padding: 20px; border-radius: 15px; 
+    text-align: center; margin-bottom: 20px; 
+    box-shadow: 0 0 20px rgba(255, 68, 68, 0.3);
+}
+.consensus-title { color: #FF4444; font-weight: bold; font-size: 18px; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px; }
+.consensus-number { font-size: 70px; font-weight: 900; color: #FFD700; line-height: 1; text-shadow: 0 0 15px rgba(255, 215, 0, 0.5); margin: 10px 0; }
+.consensus-desc { color: #aaa; font-size: 14px; }
+
+.killer-box { background-color: #3b0000; border: 1px solid #ff4444; padding: 15px; border-radius: 12px; text-align: center; margin-bottom: 15px; box-shadow: inset 0 0 20px rgba(255,0,0,0.2); }
+.killer-digit { font-size: 40px; font-weight: 900; color: #ff4444; text-shadow: 0 0 10px rgba(255, 68, 68, 0.5); margin: 5px 0; }
+
+/* --- PREDICTION --- */
+.prediction-box { text-align: center; padding: 30px; background: linear-gradient(135deg, #1a1a1a, #000); border: 3px solid #FFD700; border-radius: 20px; margin-top: 25px; box-shadow: 0 0 40px rgba(255, 215, 0, 0.2); }
+.pred-pairs { font-size: 56px; font-weight: 900; color: #39FF14; line-height: 1.4; text-shadow: 0 0 20px rgba(57, 255, 20, 0.6); }
+
+/* --- OTHER --- */
+.stat-card { background-color: #444; padding: 10px; text-align: center; border-radius: 8px; margin-bottom: 10px; color: white; }
+.stat-val { font-size: 28px; font-weight: bold; color: #00FF7F; }
+.stat-label { font-size: 14px; color: #CCCCCC; }
 .sidebar-stat-box { background-color: #262626; padding: 12px; border-radius: 10px; margin-bottom: 10px; text-align: center; border: 1px solid #444; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
 .sidebar-stat-num { font-size: 28px; font-weight: 900; color: #FFD700; line-height: 1.2; }
 .sidebar-stat-label { font-size: 12px; color: #aaa; margin-bottom: 2px; }
+.f-label { font-size: 15px; color: #999; width: 40px; font-weight: 600; }
 
-/* --- CONSENSUS & KILLER --- */
-.consensus-box { background: linear-gradient(135deg, #3b0000 0%, #1a0000 100%); border: 1px solid #ff4444; padding: 20px; border-radius: 15px; text-align: center; height: 100%; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 0 15px rgba(255, 68, 68, 0.1); }
-.consensus-title { color: #ff4444; font-size: 20px; font-weight: bold; margin-bottom: 5px; }
-.consensus-number { font-size: 90px; font-weight: 900; color: #FFD700; text-shadow: 0 0 20px rgba(255, 215, 0, 0.3); line-height: 0.9; }
-
-.killer-container { background: #1a0505; border: 1px solid #550000; border-radius: 15px; padding: 15px; text-align: center; height: 100%; display: flex; flex-direction: column; justify-content: space-between; }
-.killer-main-title { color: #ff4444; font-weight: bold; font-size: 16px; }
-.killer-main-digit { font-size: 56px; font-weight: 900; color: #ff4444; line-height: 1; text-shadow: 0 0 10px rgba(255, 0, 0, 0.3); }
-.killer-sub-grid { display: flex; justify-content: space-around; margin-top: 10px; border-top: 1px solid #330000; padding-top: 10px; }
-.killer-sub-item { text-align: center; }
-.killer-sub-val { font-size: 20px; font-weight: bold; color: #ff8888; }
-.killer-sub-lbl { font-size: 10px; color: #884444; }
-
-/* --- OTHER --- */
-.stat-grid-box { background-color: #2e2e2e; border: 1px solid #444; border-radius: 10px; padding: 15px; text-align: center; height: 100%; }
-.grid-val-big { font-size: 32px; font-weight: bold; color: #00FF7F; }
-.ai-pick-item { background: linear-gradient(45deg, #00FF7F, #008080); color: white; font-size: 36px; font-weight: bold; width: 80px; height: 80px; line-height: 80px; text-align: center; border-radius: 50%; margin: 0 auto; }
-.main-box, .backup-box, .rolling-box { border: 2px solid #333; padding: 10px; margin-bottom: 10px; text-align: center; border-radius: 8px; font-size: 48px; font-weight: bold; }
-.main-box { background-color: #4CAF50; color: white; } .backup-box { background-color: #FF9800; color: white; }
-.pyramid-container { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; background-color: #2e2e2e; border-radius: 15px; margin-top: 10px; }
-.pyramid-row { display: flex; justify-content: center; margin-bottom: 5px; }
-.pyramid-ball { width: 40px; height: 40px; line-height: 40px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #FFD700, #DAA520); color: #000; font-size: 20px; font-weight: bold; text-align: center; margin: 0 3px; border: 2px solid #FFF; }
-.pyramid-ball.result { background: radial-gradient(circle at 30% 30%, #00FF7F, #006400); color: white; width: 60px; height: 60px; line-height: 60px; font-size: 32px; border: 3px solid #FFF; }
+/* --- SECRET PAGE --- */
+.secret-formula-title { font-size: 22px; font-weight: 900; color: #FFD700; margin-bottom: 12px; border-bottom: 1px solid #444; padding-bottom: 8px; }
+.secret-desc { color: #ddd; font-size: 14px; margin-bottom: 10px; line-height: 1.6; }
+.secret-eq-box { background: #111; padding: 12px; border-radius: 8px; border: 1px dashed #555; margin-bottom: 10px; }
+.secret-hl { color: #00FF7F; font-weight: bold; font-family: monospace; font-size: 14px; }
+.secret-step { color: #FF4444; font-weight: bold; margin-left: 5px; }
+.secret-layer-box { background: #222; padding: 15px; margin-bottom: 10px; border-radius: 10px; border-left: 4px solid #00BFFF; }
+.login-box { background: #222; padding: 30px; border-radius: 15px; border: 2px solid #FF4444; max-width: 400px; margin: 50px auto; text-align: center; box-shadow: 0 0 30px rgba(255,0,0,0.3); }
 </style>
 """
 
 # ---------------------------------------------------------
-# 3. ฟังก์ชันโหลดข้อมูล & คำนวณต่างๆ
+# 3. Logic & Calculation
 # ---------------------------------------------------------
 def format_thai_date(date_obj):
     thai_months = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."]
@@ -193,25 +196,22 @@ def load_data():
         df = df.sort_values('date_obj').reset_index(drop=True)
         df['วันที่'] = df['date_obj'].apply(format_thai_date)
         
-        thai_days = {'Monday': 'วันจันทร์', 'Tuesday': 'วันอังคาร', 'Wednesday': 'วันพุธ', 'Thursday': 'วันพฤหัสบดี', 'Friday': 'วันศุกร์', 'Saturday': 'วันเสาร์', 'Sunday': 'วันอาทิตย์'}
-        df['Day_Name'] = df['date_obj'].dt.day_name().map(thai_days)
-
         df['รางวัลที่ 1'] = df['first_prize'].astype(str).str.zfill(6)
         df['first_prize_str'] = df['รางวัลที่ 1'].copy()
         df['two_digit_str'] = df['two_digit'].astype(str).str.zfill(2)
-
-        df['R1_Lakh'] = df['รางวัลที่ 1'].str[0].astype(int); df['R1_Muen'] = df['รางวัลที่ 1'].str[1].astype(int)
-        df['R1_Pan'] = df['รางวัลที่ 1'].str[2].astype(int); df['R1_Roi'] = df['รางวัลที่ 1'].str[3].astype(int)
-        df['R1_Sib'] = df['รางวัลที่ 1'].str[4].astype(int); df['R1_Nui'] = df['รางวัลที่ 1'].str[5].astype(int)
         df['2 ตัวล่าง'] = df['two_digit'].astype(str).str.zfill(2)
-        df['Bot_Sib'] = df['2 ตัวล่าง'].str[0].astype(int); df['Bot_Nui'] = df['2 ตัวล่าง'].str[1].astype(int)
         
         cols_3 = ['three_digit_1', 'three_digit_2', 'three_digit_3', 'three_digit_4']
         new_cols_3 = ['เลขท้าย 3 ตัว (1)', 'เลขท้าย 3 ตัว (2)', 'เลขท้าย 3 ตัว (3)', 'เลขท้าย 3 ตัว (4)']
         for old, new in zip(cols_3, new_cols_3):
             if old in df.columns: df[new] = df[old].astype(str).str.zfill(3)
             else: df[new] = "000"
-
+            
+        df['R1_Lakh'] = df['รางวัลที่ 1'].str[0].astype(int); df['R1_Muen'] = df['รางวัลที่ 1'].str[1].astype(int)
+        df['R1_Pan'] = df['รางวัลที่ 1'].str[2].astype(int); df['R1_Roi'] = df['รางวัลที่ 1'].str[3].astype(int)
+        df['R1_Sib'] = df['รางวัลที่ 1'].str[4].astype(int); df['R1_Nui'] = df['รางวัลที่ 1'].str[5].astype(int)
+        df['Bot_Sib'] = df['2 ตัวล่าง'].str[0].astype(int); df['Bot_Nui'] = df['2 ตัวล่าง'].str[1].astype(int)
+        
         df['Top_Ten'] = df['R1_Sib']; df['Top_Unit'] = df['R1_Nui']
         df['Bot_Ten'] = df['Bot_Sib']; df['Bot_Unit'] = df['Bot_Nui']
         df['2 ตัวบน'] = df['รางวัลที่ 1'].str[-2:]
@@ -219,7 +219,7 @@ def load_data():
     except Exception as e:
         return pd.DataFrame()
 
-# --- HELPER: Streaks ---
+# --- Shared Helper ---
 def calculate_hit_streaks(hit_series):
     hits = hit_series.astype(int).tolist()
     current_streak = 0; max_streak = 0
@@ -339,7 +339,6 @@ def calculate_four_standing_digits(df):
     backtest_df = backtest_df[['วันที่', 'เลขที่ออก (2 ตัว)', 'Hit_Status']]
     return next_standing_digits, calculated_accuracy, total_hits, total_checks, backtest_df, current_streak, max_streak 
 
-# --- Puck Luk ---
 def calculate_puck_luk_stats(df):
     positions = [('R1_Sib', 'สิบบน (R1 P5)'), ('R1_Nui', 'หน่วยบน (R1 P6)'), ('Bot_Sib', 'สิบล่าง (2D P1)'), ('Bot_Nui', 'หน่วยล่าง (2D P2)')]
     puck_luk_results = {}
@@ -349,7 +348,6 @@ def calculate_puck_luk_stats(df):
         puck_luk_results[pos_name] = {'Prediction': int(counts.index[0]) if not counts.empty else 0, 'Top_3_Digits': counts.head(3).index.tolist(), 'Top_3_Percent': counts.head(3).values.tolist(), 'ChartData': chart_data}
     return puck_luk_results
 
-# --- Next Mover ---
 def calculate_next_mover_stats(df, leading_digit):
     target_cols = ['R1_Sib', 'R1_Nui', 'Bot_Sib', 'Bot_Nui']
     df['is_leading'] = (df[target_cols] == leading_digit).any(axis=1)
@@ -360,7 +358,18 @@ def calculate_next_mover_stats(df, leading_digit):
     mover_counts = Counter(next_movers); top_5 = mover_counts.most_common(5)
     return top_5
 
-# --- Pyramid HTML Helper ---
+def calculate_hit_streaks(hit_series):
+    hits = hit_series.astype(int).tolist(); current_streak = 0; max_streak = 0
+    for hit in reversed(hits):
+        if hit == 1: current_streak += 1
+        else: break
+    temp_streak = 0
+    for hit in hits:
+        if hit == 1: temp_streak += 1
+        else: max_streak = max(max_streak, temp_streak); temp_streak = 0
+    max_streak = max(max_streak, temp_streak)
+    return current_streak, max_streak
+
 def generate_pyramid_html(layers):
     html = "<div class='pyramid-container'>"
     for i, layer in enumerate(layers):
@@ -373,45 +382,34 @@ def generate_pyramid_html(layers):
     html += "</div>"
     return html
 
-# --- สูตร 3: มหาพีระมิด (Grand Pyramid - 8 ตัว) ---
 def calculate_grand_pyramid_stats(df):
     prev = df.shift(1)
-    
     current_layer_cols = ['R1_Lakh', 'R1_Muen', 'R1_Pan', 'R1_Roi', 'R1_Sib', 'R1_Nui', 'Bot_Sib', 'Bot_Nui']
     temp_df = prev[current_layer_cols].copy()
-    
     while len(current_layer_cols) > 1:
         next_cols = []
         for i in range(len(current_layer_cols) - 1):
             col_name = f"L{len(current_layer_cols)}_{i}"
-            c1 = current_layer_cols[i]
-            c2 = current_layer_cols[i+1]
+            c1 = current_layer_cols[i]; c2 = current_layer_cols[i+1]
             temp_df[col_name] = (temp_df[c1] + temp_df[c2]) % 10
             next_cols.append(col_name)
         current_layer_cols = next_cols
-        
     pred_col = current_layer_cols[0]
-    
     pos_8 = ['R1_Lakh', 'R1_Muen', 'R1_Pan', 'R1_Roi', 'R1_Sib', 'R1_Nui', 'Bot_Sib', 'Bot_Nui']
     pos_3top = ['R1_Roi', 'R1_Sib', 'R1_Nui']
     pos_2top = ['R1_Sib', 'R1_Nui']
     pos_2bot = ['Bot_Sib', 'Bot_Nui']
-    
     def check_hit(cols):
         mask = pd.Series([False]*len(df), index=df.index)
         for col in cols: mask = mask | (df[col] == temp_df[pred_col])
         return mask
-        
     hit_8pos = check_hit(pos_8); hit_3top = check_hit(pos_3top)
     hit_2top = check_hit(pos_2top); hit_2bot = check_hit(pos_2bot)
-    
     valid_mask = ~temp_df[pred_col].isna(); total_checks = valid_mask.sum()
-    
     acc_8pos = (hit_8pos & valid_mask).sum() / total_checks * 100
     acc_3top = (hit_3top & valid_mask).sum() / total_checks * 100
     acc_2top = (hit_2top & valid_mask).sum() / total_checks * 100
     acc_2bot = (hit_2bot & valid_mask).sum() / total_checks * 100
-    
     last = df.iloc[-1]
     lb = [int(last[c]) for c in ['R1_Lakh', 'R1_Muen', 'R1_Pan', 'R1_Roi', 'R1_Sib', 'R1_Nui', 'Bot_Sib', 'Bot_Nui']]
     layers = [lb]; curr = lb
@@ -420,44 +418,30 @@ def calculate_grand_pyramid_stats(df):
         for i in range(len(curr)-1): nxt.append(int((curr[i]+curr[i+1])%10))
         layers.append(nxt); curr = nxt
     final_digit = curr[0]
-    
-    return {
-        'Digit': final_digit, 'Layers': layers,
-        'Acc_8Pos': acc_8pos, 'Acc_3Top': acc_3top, 
-        'Acc_2Top': acc_2top, 'Acc_2Bot': acc_2bot, 'Total': int(total_checks)
-    }
+    return {'Digit': final_digit, 'Layers': layers, 'Acc_8Pos': acc_8pos, 'Acc_3Top': acc_3top, 'Acc_2Top': acc_2top, 'Acc_2Bot': acc_2bot, 'Total': int(total_checks)}
 
 # --- สูตร 2: สามเหลี่ยมทองคำ ---
 def calculate_pyramid_detailed_stats(df):
     prev = df.shift(1)
     b0, b1, b2 = prev['R1_Roi'], prev['R1_Sib'], prev['R1_Nui']
     b3, b4 = prev['Bot_Sib'], prev['Bot_Nui']
-    
     l1_0, l1_1 = (b0+b1)%10, (b1+b2)%10; l1_2, l1_3 = (b2+b3)%10, (b3+b4)%10
     l2_0, l2_1, l2_2 = (l1_0+l1_1)%10, (l1_1+l1_2)%10, (l1_2+l1_3)%10
     l3_0, l3_1 = (l2_0+l2_1)%10, (l2_1+l2_2)%10
     pred = (l3_0+l3_1)%10
-    
     pos_8 = ['R1_Lakh', 'R1_Muen', 'R1_Pan', 'R1_Roi', 'R1_Sib', 'R1_Nui', 'Bot_Sib', 'Bot_Nui']
-    pos_3top = ['R1_Roi', 'R1_Sib', 'R1_Nui']
-    pos_2top = ['R1_Sib', 'R1_Nui']
-    pos_2bot = ['Bot_Sib', 'Bot_Nui']
-    
+    pos_3top = ['R1_Roi', 'R1_Sib', 'R1_Nui']; pos_2top = ['R1_Sib', 'R1_Nui']; pos_2bot = ['Bot_Sib', 'Bot_Nui']
     def check_hit(cols):
         mask = pd.Series([False]*len(df), index=df.index)
         for col in cols: mask = mask | (df[col] == pred)
         return mask
-        
     hit_8pos = check_hit(pos_8); hit_3top = check_hit(pos_3top)
     hit_2top = check_hit(pos_2top); hit_2bot = check_hit(pos_2bot)
-    
     valid_mask = ~np.isnan(pred); total_checks = valid_mask.sum()
-    
     acc_8pos = (hit_8pos & valid_mask).sum() / total_checks * 100
     acc_3top = (hit_3top & valid_mask).sum() / total_checks * 100
     acc_2top = (hit_2top & valid_mask).sum() / total_checks * 100
     acc_2bot = (hit_2bot & valid_mask).sum() / total_checks * 100
-    
     last = df.iloc[-1]
     lb = [int(last['R1_Roi']), int(last['R1_Sib']), int(last['R1_Nui']), int(last['Bot_Sib']), int(last['Bot_Nui'])]
     layers = [lb]; curr = lb
@@ -466,45 +450,33 @@ def calculate_pyramid_detailed_stats(df):
         for i in range(len(curr)-1): nxt.append(int((curr[i]+curr[i+1])%10))
         layers.append(nxt); curr = nxt
     final_digit = curr[0]
-    
-    return {
-        'Digit': final_digit, 'Layers': layers,
-        'Acc_8Pos': acc_8pos, 'Acc_3Top': acc_3top, 
-        'Acc_2Top': acc_2top, 'Acc_2Bot': acc_2bot, 'Total': int(total_checks)
-    }
+    return {'Digit': final_digit, 'Layers': layers, 'Acc_8Pos': acc_8pos, 'Acc_3Top': acc_3top, 'Acc_2Top': acc_2top, 'Acc_2Bot': acc_2bot, 'Total': int(total_checks)}
 
 # --- สูตรฟันปลา 3 ตัว ---
 def calculate_triple_fhan_pla_detailed_stats(df):
     prev = df.shift(1)
     base_calc = (prev['R1_Muen'] + prev['R1_Sib'] + prev['Bot_Nui'] + 7) % 10
     p1 = base_calc; p2 = (base_calc + 1) % 10; p3 = (base_calc + 2) % 10
-    
     pos_8 = ['R1_Lakh', 'R1_Muen', 'R1_Pan', 'R1_Roi', 'R1_Sib', 'R1_Nui', 'Bot_Sib', 'Bot_Nui']
     pos_3top = ['R1_Roi', 'R1_Sib', 'R1_Nui']; pos_2top = ['R1_Sib', 'R1_Nui']; pos_2bot = ['Bot_Sib', 'Bot_Nui']
-    
     def check_hit(cols):
         mask = pd.Series([False] * len(df), index=df.index)
         for col in cols: mask = mask | (df[col] == p1) | (df[col] == p2) | (df[col] == p3)
         return mask
-
     hit_8pos = check_hit(pos_8); hit_3top = check_hit(pos_3top)
     hit_2top = check_hit(pos_2top); hit_2bot = check_hit(pos_2bot)
-    
     valid_mask = ~np.isnan(base_calc); total_checks = valid_mask.sum()
-    
     acc_8pos = (hit_8pos & valid_mask).sum() / total_checks * 100
     acc_3top = (hit_3top & valid_mask).sum() / total_checks * 100
     acc_2top = (hit_2top & valid_mask).sum() / total_checks * 100
     acc_2bot = (hit_2bot & valid_mask).sum() / total_checks * 100
-    
     last = df.iloc[-1]
     next_base = (last['R1_Muen'] + last['R1_Sib'] + last['Bot_Nui'] + 7) % 10
     next_set = [int(next_base), int((next_base+1)%10), int((next_base+2)%10)]
-    
     return {'Digits': next_set, 'Base': int(next_base), 'Acc_8Pos': acc_8pos, 'Acc_3Top': acc_3top, 'Acc_2Top': acc_2top, 'Acc_2Bot': acc_2bot, 'Hits_8Pos': int((hit_8pos & valid_mask).sum()), 'Total': int(total_checks)}
 
 # ---------------------------------------------------------
-# 🆕 LOGIC: 4 สูตรมหาประลัย (God Mode Logic)
+# 🆕 LOGIC: 6 สูตรมหาประลัย (God Mode Logic)
 # ---------------------------------------------------------
 def get_variables_god_mode(row):
     p1 = [int(x) for x in str(row['รางวัลที่ 1'])]
@@ -518,41 +490,71 @@ def get_variables_god_mode(row):
 def calculate_god_formulas(p1, d2, f1, f2, b1, b2):
     results = {}
     
-    # 🟢 Formula 1: Lucky 50/50 -> คู่หูพารวย
+    # 🟢 F1: Lucky 50/50
     sum_t1 = d2[0] + (f1[0]*3) + (f2[2]*2) + b1[0] + (b2[0]*2) + (b2[1]*3) + 9
     base_t1 = sum_t1 % 10
     tens_1 = [base_t1, (base_t1+1)%10, (base_t1+5)%10]
     sum_u1 = (p1[2]*2) + (p1[3]*2) + p1[4] + (p1[5]*2) + b2[0] + 7
     base_u1 = sum_u1 % 10
     units_1 = [base_u1, (base_u1+2)%10]
-    results['F1'] = {'name': 'คู่หูพารวย (Lucky 50/50)', 'tens': tens_1, 'units': units_1, 'color': '#00FF7F'} 
+    results['F1'] = {'name': 'คู่หูพารวย (Lucky)', 'tens': tens_1, 'units': units_1, 'color': '#00FF7F',
+                     'eq_t': f"{d2[0]}+({f1[0]}x3)+({f2[2]}x2)+{b1[0]}+({b2[0]}x2)+({b2[1]}x3)+9",
+                     'eq_u': f"({p1[2]}x2)+({p1[3]}x2)+{p1[4]}+({p1[5]}x2)+{b2[0]}+7"}
 
-    # 🟡 Formula 2: Emperor's Wealth -> จักรพรรดิพารวย
+    # 🟡 F2: Emperor
     sum_t2 = p1[1] + (p1[2]*4) + (d2[0]*3) + (f1[1]*2) + (f2[2]*2) + b1[1] + 6
     base_t2 = sum_t2 % 10
     tens_2 = [(base_t2+1)%10, (base_t2+3)%10, (base_t2+8)%10]
     sum_u2 = (p1[0]*4) + (f2[0]*2) + (f2[1]*2) + (b1[0]*3) + 0
     base_u2 = sum_u2 % 10
     units_2 = [(base_u2+4)%10, (base_u2+8)%10]
-    results['F2'] = {'name': 'จักรพรรดิพารวย (Emperor)', 'tens': tens_2, 'units': units_2, 'color': '#FFD700'} 
+    results['F2'] = {'name': 'จักรพรรดิ (Emperor)', 'tens': tens_2, 'units': units_2, 'color': '#FFD700',
+                     'eq_t': f"{p1[1]}+({p1[2]}x4)+({d2[0]}x3)+({f1[1]}x2)+({f2[2]}x2)+{b1[1]}+6",
+                     'eq_u': f"({p1[0]}x4)+({f2[0]}x2)+({f2[1]}x2)+({b1[0]}x3)+0"}
 
-    # 🔴 Formula 3: God of Wealth -> มหาเทพประทานทรัพย์
+    # 🔴 F3: God of Wealth
     sum_t3 = (p1[3]*4) + f1[1] + (f2[0]*4) + b1[1] + (b2[0]*3) + 4
     base_t3 = sum_t3 % 10
     tens_3 = [(base_t3+1)%10, (base_t3+7)%10, (base_t3+9)%10]
     sum_u3 = (p1[3]*2) + (p1[4]*5) + (d2[1]*5) + (f1[0]*4) + f1[1] + f1[2] + (f2[0]*2) + 9
     base_u3 = sum_u3 % 10
     units_3 = [base_u3, (base_u3+5)%10]
-    results['F3'] = {'name': 'มหาเทพประทานทรัพย์ (God of Wealth)', 'tens': tens_3, 'units': units_3, 'color': '#FF4444'} 
+    results['F3'] = {'name': 'มหาเทพ (God Wealth)', 'tens': tens_3, 'units': units_3, 'color': '#FF4444',
+                     'eq_t': f"({p1[3]}x4)+{f1[1]}+({f2[0]}x4)+{b1[1]}+({b2[0]}x3)+4",
+                     'eq_u': f"({p1[3]}x2)+({p1[4]}x5)+({d2[1]}x5)+({f1[0]}x4)+{f1[1]}+{f1[2]}+({f2[0]}x2)+9"}
 
-    # ⚫ Formula 4: The Brutal Sage -> มหาโหดโคตรเซียน
+    # ⚫ F4: Brutal Sage
     sum_t4 = (p1[1]*3) + (p1[4]*6) + (p1[5]*6) + (d2[1]*7) + (f1[2]*2) + (f2[2]*6) + (b1[0]*2) + 4
     base_t4 = sum_t4 % 10
     tens_4 = [(base_t4+3)%10, (base_t4+5)%10, (base_t4+6)%10]
     sum_u4 = (p1[0]*4) + (p1[1]*4) + (p1[4]*4) + (p1[5]*2) + (f1[0]*7) + (f2[1]*2) + (f2[2]*3) + 0
     base_u4 = sum_u4 % 10
     units_4 = [base_u4, (base_u4+9)%10]
-    results['F4'] = {'name': 'มหาโหดโคตรเซียน (Brutal Sage)', 'tens': tens_4, 'units': units_4, 'color': '#AAAAAA'} 
+    results['F4'] = {'name': 'มหาโหด (Brutal Sage)', 'tens': tens_4, 'units': units_4, 'color': '#AAAAAA',
+                     'eq_t': f"({p1[1]}x3)+({p1[4]}x6)+({p1[5]}x6)+({d2[1]}x7)+({f1[2]}x2)+({f2[2]}x6)+({b1[0]}x2)+4",
+                     'eq_u': f"({p1[0]}x4)+({p1[1]}x4)+({p1[4]}x4)+({p1[5]}x2)+({f1[0]}x7)+({f2[1]}x2)+({f2[2]}x3)+0"}
+
+    # 🔵 F5: Immortal
+    sum_t5 = (p1[4]*4) + (d2[1]*8) + (f1[1]*5) + (f2[1]*2) + (b1[1]*5) + (b2[0]*3) + (b2[1]*2) + (b2[2]*6) + 2
+    base_t5 = sum_t5 % 10
+    tens_5 = [(base_t5+3)%10, (base_t5+7)%10, (base_t5+9)%10]
+    sum_u5 = p1[1] + p1[3] + (p1[4]*4) + (d2[0]*9) + f2[0] + (f2[1]*3) + (b2[0]*4) + 9
+    base_u5 = sum_u5 % 10
+    units_5 = [(base_u5+2)%10, (base_u5+6)%10]
+    results['F5'] = {'name': 'อมตะนิรันดร์ (Immortal)', 'tens': tens_5, 'units': units_5, 'color': '#00BFFF',
+                     'eq_t': f"({p1[4]}x4)+({d2[1]}x8)+({f1[1]}x5)+({f2[1]}x2)+({b1[1]}x5)+({b2[0]}x3)+({b2[1]}x2)+({b2[2]}x6)+2",
+                     'eq_u': f"{p1[1]}+{p1[3]}+({p1[4]}x4)+({d2[0]}x9)+{f2[0]}+({f2[1]}x3)+({b2[0]}x4)+9"}
+
+    # 🟣 F6: Cosmic Power
+    sum_t6 = (p1[1]*7) + (p1[5]*2) + (d2[0]*7) + (f1[2]*7) + (b1[0]*7) + (b1[1]*7) + 3
+    base_t6 = sum_t6 % 10
+    tens_6 = [(base_t6+1)%10, (base_t6+3)%10, (base_t6+7)%10]
+    sum_u6 = (d2[0]*6) + (f1[1]*4) + b1[0] + (b1[1]*2) + 8
+    base_u6 = sum_u6 % 10
+    units_6 = [(base_u6+2)%10, (base_u6+4)%10]
+    results['F6'] = {'name': 'พลังจักรวาล (Cosmic)', 'tens': tens_6, 'units': units_6, 'color': '#9932CC',
+                     'eq_t': f"({p1[1]}x7)+({p1[5]}x2)+({d2[0]}x7)+({f1[2]}x7)+({b1[0]}x7)+({b1[1]}x7)+3",
+                     'eq_u': f"({d2[0]}x6)+({f1[1]}x4)+{b1[0]}+({b1[1]}x2)+8"}
     
     return results
 
@@ -564,36 +566,23 @@ def find_consensus_god_mode(formulas_result):
                 all_pairs.append(f"{t}{u}")
     return Counter(all_pairs).most_common()
 
-# --- Stats Helper for 4 Formulas (20 Draws) ---
+# --- Stats Helper for 6 Formulas (20 Draws) ---
 @st.cache_data
 def calculate_formula_history_stats(df, lookback=20):
     if len(df) < lookback + 2: return {}
+    stats = {k: {'hits': 0, 'streak': 0, 'hits_list': []} for k in ['F1', 'F2', 'F3', 'F4', 'F5', 'F6']}
     
-    stats = {
-        'F1': {'hits': 0, 'streak': 0, 'hits_list': []}, 
-        'F2': {'hits': 0, 'streak': 0, 'hits_list': []},
-        'F3': {'hits': 0, 'streak': 0, 'hits_list': []}, 
-        'F4': {'hits': 0, 'streak': 0, 'hits_list': []}
-    }
-    
-    # Analyze last 'lookback' draws
     start_idx = len(df) - lookback
-    
     for i in range(start_idx, len(df)):
-        past_row = df.iloc[i-1] # input
-        target_row = df.iloc[i] # result
-        
-        # Calculate
+        past_row = df.iloc[i-1]; target_row = df.iloc[i]
         pp1, pd2, pf1, pf2, pb1, pb2 = get_variables_god_mode(past_row)
         res = calculate_god_formulas(pp1, pd2, pf1, pf2, pb1, pb2)
-        
         real_2d = str(target_row['2 ตัวล่าง']).zfill(2)
         real_top = str(target_row['2 ตัวบน']).zfill(2)
         
-        for key in ['F1', 'F2', 'F3', 'F4']:
+        for key in stats.keys():
             fval = res[key]
             f_pairs = [f"{t}{u}" for t in fval['tens'] for u in fval['units']]
-            
             is_hit = (real_2d in f_pairs) or (real_top in f_pairs)
             if is_hit:
                 stats[key]['hits'] += 1
@@ -601,7 +590,6 @@ def calculate_formula_history_stats(df, lookback=20):
             else:
                 stats[key]['hits_list'].append(0)
     
-    # Calculate streak
     for key in stats:
         h_list = stats[key]['hits_list']
         curr_streak = 0
@@ -609,46 +597,7 @@ def calculate_formula_history_stats(df, lookback=20):
             if h == 1: curr_streak += 1
             else: break
         stats[key]['streak'] = curr_streak
-        
     return stats
-
-# --- NEW: Backtest Data Generator ---
-def get_backtest_dataframe(df, periods=20):
-    rows = []
-    if len(df) < periods + 1: return pd.DataFrame()
-
-    # Loop from latest index down
-    for i in range(len(df)-1, len(df)-1-periods, -1):
-        target_row = df.iloc[i]      
-        input_row = df.iloc[i-1]     
-
-        p1, d2, f1, f2, b1, b2 = get_variables_god_mode(input_row)
-        formulas = calculate_god_formulas(p1, d2, f1, f2, b1, b2)
-
-        real_2d = str(target_row['2 ตัวล่าง']).zfill(2)
-        real_top = str(target_row['2 ตัวบน']).zfill(2)
-
-        row_data = {
-            "งวดวันที่": target_row['วันที่'],
-            "เลขที่ออก (บน/ล่าง)": f"{real_top} / {real_2d}"
-        }
-
-        for key in ['F1', 'F2', 'F3', 'F4']:
-            f_data = formulas[key]
-            f_pairs = [f"{t}{u}" for t in f_data['tens'] for u in f_data['units']]
-            
-            hits = []
-            if real_top in f_pairs: hits.append("บน")
-            if real_2d in f_pairs: hits.append("ล่าง")
-            
-            if hits:
-                row_data[f_data['name']] = "✅ " + ",".join(hits)
-            else:
-                row_data[f_data['name']] = "❌"
-        
-        rows.append(row_data)
-    
-    return pd.DataFrame(rows)
 
 # --- Killer Scan Logic ---
 @st.cache_data
@@ -660,59 +609,71 @@ def scan_for_killers_v2(df):
     }
     input_cols = list(cols_map.keys())
     results = []
-    
     pairs = list(itertools.combinations(input_cols, 2))
     
     for c1, c2 in pairs:
-        col1_data = cols_map[c1]
-        col2_data = cols_map[c2]
-        
+        col1_data = cols_map[c1]; col2_data = cols_map[c2]
         for k in range(10):
             pred = (col1_data + col2_data + k) % 10
-            pred_shifted = pred.shift(1) # Predict current from previous
+            pred_shifted = pred.shift(1)
+            mask = ~pred_shifted.isna(); valid_df = df[mask]; p = pred_shifted[mask]; total = len(valid_df)
             
-            mask = ~pred_shifted.isna()
-            valid_df = df[mask]
-            p = pred_shifted[mask]
-            total = len(valid_df)
-            
-            # Dead Top 3 (Target)
+            # Top 3
             hit_top3 = (valid_df['R1_Roi'] == p) | (valid_df['R1_Sib'] == p) | (valid_df['R1_Nui'] == p)
             success_top3 = ~hit_top3
             acc_top3 = success_top3.sum() / total * 100
             
-            # Dead Top 2
+            # Top 2
             hit_top2 = (valid_df['R1_Sib'] == p) | (valid_df['R1_Nui'] == p)
             success_top2 = ~hit_top2
             acc_top2 = success_top2.sum() / total * 100
             
-            # Dead Bot 2
+            # Bot 2
             hit_bot2 = (valid_df['Bot_Sib'] == p) | (valid_df['Bot_Nui'] == p)
             success_bot2 = ~hit_bot2
             acc_bot2 = success_bot2.sum() / total * 100
             
             last_val = (cols_map[c1].iloc[-1] + cols_map[c2].iloc[-1] + k) % 10
             
-            # Streaks Calculation (Calculated only for high accuracy)
-            cur_streak_t3, max_streak_t3 = (0,0)
-            if acc_top3 > 75: cur_streak_t3, max_streak_t3 = calculate_hit_streaks(success_top3)
-                
-            cur_streak_t2, max_streak_t2 = (0,0)
-            if acc_top2 > 80: cur_streak_t2, max_streak_t2 = calculate_hit_streaks(success_top2)
-                
-            cur_streak_b2, max_streak_b2 = (0,0)
-            if acc_bot2 > 80: cur_streak_b2, max_streak_b2 = calculate_hit_streaks(success_bot2)
+            # Calculate Streaks
+            cur_t3, max_t3 = (0, 0)
+            cur_t2, max_t2 = (0, 0)
+            cur_b2, max_b2 = (0, 0)
 
+            if acc_top3 > 75: cur_t3, max_t3 = calculate_hit_streaks(success_top3)
+            if acc_top2 > 80: cur_t2, max_t2 = calculate_hit_streaks(success_top2)
+            if acc_bot2 > 80: cur_b2, max_b2 = calculate_hit_streaks(success_bot2)
+            
             if acc_top3 > 75 or acc_top2 > 80 or acc_bot2 > 80:
                 results.append({
-                    'Formula': f"({c1} + {c2} + {k}) % 10",
-                    'Acc_Top3': acc_top3, 'Cur_T3': cur_streak_t3, 'Max_T3': max_streak_t3,
-                    'Acc_Top2': acc_top2, 'Cur_T2': cur_streak_t2, 'Max_T2': max_streak_t2,
-                    'Acc_Bot2': acc_bot2, 'Cur_B2': cur_streak_b2, 'Max_B2': max_streak_b2,
+                    'Formula': f"({c1}+{c2}+{k})%10", 
+                    'Acc_Top3': acc_top3, 'Cur_T3': cur_t3, 'Max_T3': max_t3,
+                    'Acc_Top2': acc_top2, 'Cur_T2': cur_t2, 'Max_T2': max_t2,
+                    'Acc_Bot2': acc_bot2, 'Cur_B2': cur_b2, 'Max_B2': max_b2,
                     'Next_Dead': int(last_val)
                 })
-                
     return pd.DataFrame(results)
+
+# --- Backtest Generator ---
+def get_backtest_dataframe(df, periods=20):
+    rows = []
+    if len(df) < periods + 1: return pd.DataFrame()
+    for i in range(len(df)-1, len(df)-1-periods, -1):
+        target_row = df.iloc[i]; input_row = df.iloc[i-1]
+        p1, d2, f1, f2, b1, b2 = get_variables_god_mode(input_row)
+        formulas = calculate_god_formulas(p1, d2, f1, f2, b1, b2)
+        real_2d = str(target_row['2 ตัวล่าง']).zfill(2)
+        real_top = str(target_row['2 ตัวบน']).zfill(2)
+        row_data = {"งวดวันที่": target_row['วันที่'], "เลขที่ออก (บน/ล่าง)": f"{real_top} / {real_2d}"}
+        for key in formulas.keys():
+            f_data = formulas[key]
+            f_pairs = [f"{t}{u}" for t in f_data['tens'] for u in f_data['units']]
+            hits = []
+            if real_top in f_pairs: hits.append("บน")
+            if real_2d in f_pairs: hits.append("ล่าง")
+            row_data[f_data['name']] = "✅ " + ",".join(hits) if hits else "❌"
+        rows.append(row_data)
+    return pd.DataFrame(rows)
 
 # ---------------------------------------------------------
 # 4. ส่วนแสดงผล (UI Logic)
@@ -720,188 +681,447 @@ def scan_for_killers_v2(df):
 df = load_data()
 
 st.sidebar.title("🐯 Lotto Master")
-# Using state to control navigation
 if 'current_page' in st.session_state:
-    if st.session_state.current_page in ALL_PAGES:
-        idx = ALL_PAGES.index(st.session_state.current_page)
-    else:
-        idx = 0
+    if st.session_state.current_page in ALL_PAGES: idx = ALL_PAGES.index(st.session_state.current_page)
+    else: idx = 0
     page = st.sidebar.radio("เลือกเมนู:", ALL_PAGES, index=idx, key="sidebar_nav")
-    
-    if page != st.session_state.current_page:
-        st.session_state.current_page = page
-        st.rerun()
-else:
-    page = st.sidebar.radio("เลือกเมนู:", ALL_PAGES, key="sidebar_nav")
+    if page != st.session_state.current_page: st.session_state.current_page = page; st.rerun()
+else: page = st.sidebar.radio("เลือกเมนู:", ALL_PAGES, key="sidebar_nav")
 
-# ---- SIDEBAR STATS (MOVED HERE) ----
 if not df.empty:
-    st.sidebar.markdown("---")
-    st.sidebar.subheader("🔥 สถิติฮิตตลอดกาล")
-    
-    top2_counts = df['2 ตัวบน'].value_counts().head(3)
-    bot2_counts = df['2 ตัวล่าง'].value_counts().head(3)
-    
-    c_side1, c_side2 = st.sidebar.columns(2)
-    with c_side1:
-        st.markdown(f"""
-        <div class="sidebar-stat-box">
-            <div class="sidebar-stat-label">บนฮิตสุด</div>
-            <div class="sidebar-stat-num">{top2_counts.index[0]}</div>
-            <div style="font-size:10px; color:#888;">รอง: {top2_counts.index[1]}</div>
-        </div>
-        """, unsafe_allow_html=True)
-    with c_side2:
-        st.markdown(f"""
-        <div class="sidebar-stat-box">
-            <div class="sidebar-stat-label">ล่างฮิตสุด</div>
-            <div class="sidebar-stat-num">{bot2_counts.index[0]}</div>
-            <div style="font-size:10px; color:#888;">รอง: {bot2_counts.index[1]}</div>
-        </div>
-        """, unsafe_allow_html=True)
-# -----------------------------------
+    st.sidebar.markdown("---"); st.sidebar.subheader("🔥 สถิติฮิตตลอดกาล")
+    t2 = df['2 ตัวบน'].value_counts().head(2); b2 = df['2 ตัวล่าง'].value_counts().head(2)
+    c1, c2 = st.sidebar.columns(2)
+    with c1: st.markdown(f"<div class='sidebar-stat-box'><div class='sidebar-stat-label'>บนฮิต</div><div class='sidebar-stat-num'>{t2.index[0]}</div></div>", unsafe_allow_html=True)
+    with c2: st.markdown(f"<div class='sidebar-stat-box'><div class='sidebar-stat-label'>ล่างฮิต</div><div class='sidebar-stat-num'>{b2.index[0]}</div></div>", unsafe_allow_html=True)
 
 st.markdown(custom_css, unsafe_allow_html=True)
 
 # ==========================================
-# 🏠 หน้าที่ 0: หน้าแรก (4 สูตรมหาประลัย)
+# 🏠 หน้าที่ 0: หน้าแรก (6 สูตรมหาประลัย)
 # ==========================================
-if page == "🏠 หน้าแรก (4 สูตรมหาประลัย)":
-    if df.empty: st.error("ไม่สามารถโหลดข้อมูลได้"); st.stop()
+if page == "🏠 หน้าแรก (6 สูตรมหาประลัย)":
+    if df.empty: st.error("No Data"); st.stop()
+    last = df.iloc[-1]
     
-    last_row = df.iloc[-1]
-    
-    # 1. Hero Section (Premium Gold)
+    # Hero Section
     st.markdown(f"""
     <div class='hero-container'>
-        <div class='hero-title'>รางวัลที่ 1 งวดวันที่ {last_row['วันที่']}</div>
-        <div class='hero-number'>{last_row['รางวัลที่ 1']}</div>
-        <div class='hero-sub-grid'>
-            <div class='hero-sub-item'>
-                <div class='hero-sub-label'>เลขหน้า 3 ตัว</div>
-                <div class='hero-sub-val'>{last_row['เลขท้าย 3 ตัว (1)']} | {last_row['เลขท้าย 3 ตัว (2)']}</div>
+        <div style="color:#aaa; font-size:18px;">งวดวันที่ {last['วันที่']}</div>
+        <div class='hero-number'>{last['รางวัลที่ 1']}</div>
+        <div style="display:flex; justify-content:center; gap:20px; margin-top:10px;">
+            <div style="background:#222; padding:5px 15px; border-radius:10px; border:1px solid #444;">
+                <span style="color:#888; font-size:12px;">3 ตัวหน้า</span><br>
+                <span style="color:#eee; font-weight:bold;">{last['เลขท้าย 3 ตัว (1)']} | {last['เลขท้าย 3 ตัว (2)']}</span>
             </div>
-            <div class='hero-sub-item'>
-                <div class='hero-sub-label'>เลขท้าย 3 ตัว</div>
-                <div class='hero-sub-val'>{last_row['เลขท้าย 3 ตัว (3)']} | {last_row['เลขท้าย 3 ตัว (4)']}</div>
+            <div style="background:#222; padding:5px 15px; border-radius:10px; border:1px solid #444;">
+                <span style="color:#888; font-size:12px;">3 ตัวท้าย</span><br>
+                <span style="color:#eee; font-weight:bold;">{last['เลขท้าย 3 ตัว (3)']} | {last['เลขท้าย 3 ตัว (4)']}</span>
             </div>
-            <div class='hero-sub-item'>
-                <div class='hero-sub-label'>2 ตัวล่าง</div>
-                <div class='hero-sub-val' style='color:#FFD700;'>{last_row['2 ตัวล่าง']}</div>
+            <div style="background:#222; padding:5px 15px; border-radius:10px; border:1px solid #FFD700;">
+                <span style="color:#888; font-size:12px;">2 ตัวล่าง</span><br>
+                <span style="color:#FFD700; font-weight:bold; font-size:20px;">{last['2 ตัวล่าง']}</span>
             </div>
         </div>
     </div>
     """, unsafe_allow_html=True)
     
-    st.divider()
-    
-    # 2. Section A: 4 สูตรมหาประลัย & Killer
-    
-    # คำนวณสูตร
-    p1, d2, f1, f2, b1, b2 = get_variables_god_mode(last_row)
+    # Calculate Logic
+    p1, d2, f1, f2, b1, b2 = get_variables_god_mode(last)
     formulas = calculate_god_formulas(p1, d2, f1, f2, b1, b2)
     consensus = find_consensus_god_mode(formulas)
-    
-    # คำนวณ Stats ย้อนหลัง 20 งวด
     f_stats = calculate_formula_history_stats(df, lookback=20)
     
-    top_pick = consensus[0] if consensus else ("--", 0)
-    
-    # Killer Logic
-    killer_df = scan_for_killers_v2(df)
-    dead_top3 = "-"; dead_top2 = "-"; dead_bot2 = "-"
-    if not killer_df.empty:
-        best_t3 = killer_df.sort_values('Acc_Top3', ascending=False).iloc[0]
-        best_t2 = killer_df.sort_values('Acc_Top2', ascending=False).iloc[0]
-        best_b2 = killer_df.sort_values('Acc_Bot2', ascending=False).iloc[0]
-        dead_top3 = f"{best_t3['Next_Dead']}"
-        dead_top2 = f"{best_t2['Next_Dead']}"
-        dead_bot2 = f"{best_b2['Next_Dead']}"
-    
-    # Layout: Left (Consensus), Center (Formulas), Right (Killer)
-    col_con, col_form, col_kill = st.columns([1.5, 3, 1.5])
-    
-    with col_con:
+    # Determine Ranks
+    sorted_stats = sorted(f_stats.items(), key=lambda x: (x[1]['hits'], x[1]['streak']), reverse=True)
+    rank_map = {}
+    if len(sorted_stats) > 0: rank_map[sorted_stats[0][0]] = ("👑 #1", "rank-1")
+    if len(sorted_stats) > 1: rank_map[sorted_stats[1][0]] = ("🥈 #2", "rank-2")
+    if len(sorted_stats) > 2: rank_map[sorted_stats[2][0]] = ("🥉 #3", "rank-3")
+
+    # Main Layout
+    col_main, col_sidebar = st.columns([3, 1.2])
+
+    with col_main:
+        st.markdown("### ✨ 6 สูตรมหาประลัย (ทำนายงวดหน้า)")
+        
+        # Function to generate card HTML (NO INDENTATION - FIXED!)
+        def create_card_html(key_id):
+            val = formulas[key_id]
+            stats = f_stats.get(key_id, {'hits':0,'streak':0})
+            
+            rank_html = ""
+            if key_id in rank_map:
+                label, css_class = rank_map[key_id]
+                rank_html = f"<div class='rank-badge {css_class}'>{label}</div>"
+
+            tens_html = "".join([f"<span class='f-val-badge'>{x}</span>" for x in val['tens']])
+            units_html = "".join([f"<span class='f-val-badge'>{x}</span>" for x in val['units']])
+            pairs_html = ", ".join([f"{t}{u}" for t in val['tens'] for u in val['units']])
+
+            return f"""
+<div class="formula-card-home" style="border-left: 5px solid {val['color']};">
+{rank_html}
+<div class="f-header">
+<div class="f-title" style="color:{val['color']};">{val['name']}</div>
+<div class="f-stats-badge">เข้า {stats['hits']}/20 | ติดกัน {stats['streak']}</div>
+</div>
+<div class="f-row"><span class="f-label">สิบ:</span> {tens_html}</div>
+<div class="f-row"><span class="f-label">หน่วย:</span> {units_html}</div>
+<div class="f-pair-box">{pairs_html}</div>
+</div>
+"""
+
+        # Grid System for 6 Cards
+        row1_1, row1_2 = st.columns(2)
+        with row1_1: st.markdown(create_card_html('F1'), unsafe_allow_html=True)
+        with row1_2: st.markdown(create_card_html('F2'), unsafe_allow_html=True)
+
+        row2_1, row2_2 = st.columns(2)
+        with row2_1: st.markdown(create_card_html('F3'), unsafe_allow_html=True)
+        with row2_2: st.markdown(create_card_html('F4'), unsafe_allow_html=True)
+
+        row3_1, row3_2 = st.columns(2)
+        with row3_1: st.markdown(create_card_html('F5'), unsafe_allow_html=True)
+        with row3_2: st.markdown(create_card_html('F6'), unsafe_allow_html=True)
+
+    with col_sidebar:
+        # Consensus Box (Fixed!)
+        top_pick = consensus[0] if consensus else ("--", 0)
         st.markdown(f"""
         <div class="consensus-box">
-            <div class="consensus-title">🔥 เลขชนแรงสุด</div>
+            <div class="consensus-title">🔥 ชนแรงสุด</div>
             <div class="consensus-number">{top_pick[0]}</div>
-            <div style="color:#ccc;">ชนกัน {top_pick[1]} สูตร</div>
-            <hr style="border-color:#550000; width:50%; margin: 15px auto;">
-            <div style="color:#ff8888; font-size:12px;">คำเตือน: โปรดใช้วิจารณญาณ</div>
-        </div>
-        """, unsafe_allow_html=True)
+            <div class="consensus-desc">ชนกัน {top_pick[1]} สูตร</div>
+        </div>""", unsafe_allow_html=True)
 
-    with col_form:
-        st.markdown("### ✨ 4 สูตรมหาประลัย (New Gen)")
-        c_f1, c_f2 = st.columns(2)
-        cols_ref = [c_f1, c_f2]
-        
-        items = list(formulas.items())
-        for i in range(0, 4, 2): # Row loop
-            with c_f1:
-                key, val = items[i]
-                stats = f_stats.get(key, {'hits':0, 'streak':0})
-                tens_badges = "".join([f"<span class='f-val-badge'>{x}</span>" for x in val['tens']])
-                units_badges = "".join([f"<span class='f-val-badge'>{x}</span>" for x in val['units']])
-                st.markdown(f"""
-                <div class="formula-card-home" style="border-left: 4px solid {val['color']};">
-                    <div class="f-header">
-                        <div class="f-title" style="color:{val['color']}; border:none; margin:0;">{val['name']}</div>
-                        <div class="f-stats-badge">เข้า {stats['hits']}/20 | ติดกัน {stats['streak']} งวด</div>
-                    </div>
-                    <div class="f-row"><span class="f-label">หลักสิบ:</span> {tens_badges}</div>
-                    <div class="f-row"><span class="f-label">หลักหน่วย:</span> {units_badges}</div>
-                    <div class="f-pair-box">{", ".join([f"{t}{u}" for t in val['tens'] for u in val['units']])}</div>
-                </div>
-                """, unsafe_allow_html=True)
-                
-            with c_f2:
-                key, val = items[i+1]
-                stats = f_stats.get(key, {'hits':0, 'streak':0})
-                tens_badges = "".join([f"<span class='f-val-badge'>{x}</span>" for x in val['tens']])
-                units_badges = "".join([f"<span class='f-val-badge'>{x}</span>" for x in val['units']])
-                st.markdown(f"""
-                <div class="formula-card-home" style="border-left: 4px solid {val['color']};">
-                    <div class="f-header">
-                        <div class="f-title" style="color:{val['color']}; border:none; margin:0;">{val['name']}</div>
-                        <div class="f-stats-badge">เข้า {stats['hits']}/20 | ติดกัน {stats['streak']} งวด</div>
-                    </div>
-                    <div class="f-row"><span class="f-label">หลักสิบ:</span> {tens_badges}</div>
-                    <div class="f-row"><span class="f-label">หลักหน่วย:</span> {units_badges}</div>
-                    <div class="f-pair-box">{", ".join([f"{t}{u}" for t in val['tens'] for u in val['units']])}</div>
-                </div>
-                """, unsafe_allow_html=True)
+        # Killer Scan (SideBar - Complete with Bot 2)
+        st.markdown("#### 💀 เลขดับ (Auto Scan)")
+        k_df = scan_for_killers_v2(df)
+        if not k_df.empty:
+            # Top 3
+            best_kill_3 = k_df.sort_values('Acc_Top3', ascending=False).iloc[0]
+            st.markdown(f"""
+            <div class="killer-box">
+                <div style="font-size:14px; color:#fff;">ดับบน (3 ตัว)</div>
+                <div class="killer-digit">{best_kill_3['Next_Dead']}</div>
+                <div style="font-size:10px; color:#aaa;">ความแม่นยำ {best_kill_3['Acc_Top3']:.1f}%</div>
+            </div>""", unsafe_allow_html=True)
+            
+            # Top 2
+            best_kill_2 = k_df.sort_values('Acc_Top2', ascending=False).iloc[0]
+            st.markdown(f"""
+            <div class="killer-box" style="border-color:#ff8800;">
+                <div style="font-size:14px; color:#fff;">ดับบน (2 ตัว)</div>
+                <div class="killer-digit" style="color:#ff8800;">{best_kill_2['Next_Dead']}</div>
+                <div style="font-size:10px; color:#aaa;">ความแม่นยำ {best_kill_2['Acc_Top2']:.1f}%</div>
+            </div>""", unsafe_allow_html=True)
 
-    with col_kill:
-        st.markdown(f"""
-        <div class="killer-container">
-            <div>
-                <div class="killer-main-title">💀 ดับบน (3 ตัวแม่นๆ)</div>
-                <div class="killer-main-digit">{dead_top3}</div>
-            </div>
-            <div class="killer-sub-grid">
-                <div class="killer-sub-item">
-                    <div class="killer-sub-lbl">ดับบน (2 ตัว)</div>
-                    <div class="killer-sub-val">{dead_top2}</div>
-                </div>
-                <div class="killer-sub-item">
-                    <div class="killer-sub-lbl">ดับล่าง (2 ตัว)</div>
-                    <div class="killer-sub-val">{dead_bot2}</div>
-                </div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+            # Bot 2
+            best_kill_b2 = k_df.sort_values('Acc_Bot2', ascending=False).iloc[0]
+            st.markdown(f"""
+            <div class="killer-box" style="border-color:#00BFFF;">
+                <div style="font-size:14px; color:#fff;">ดับล่าง (2 ตัว)</div>
+                <div class="killer-digit" style="color:#00BFFF;">{best_kill_b2['Next_Dead']}</div>
+                <div style="font-size:10px; color:#aaa;">ความแม่นยำ {best_kill_b2['Acc_Bot2']:.1f}%</div>
+            </div>""", unsafe_allow_html=True)
+        else:
+            st.info("กำลังประมวลผล...")
 
     st.divider()
-
-    # 3. Section C: New Backtest Table (Moved here)
-    with st.expander("📊 เช็คผลงาน 4 สูตรย้อนหลัง (Backtest)", expanded=False):
+    with st.expander("📊 ตรวจสอบผลงานย้อนหลัง (Backtest)", expanded=False):
         bt_df = get_backtest_dataframe(df)
         st.dataframe(bt_df, use_container_width=True, hide_index=True)
 
 # ==========================================
-# 🔍 หน้าที่ 2: นักสืบตัวเลข (Sherlock Full)
+# 🔑 ห้องแห่งความลับ (Secret Chamber) - LOCKED!
+# ==========================================
+elif page == "🔑 ห้องแห่งความลับ (Secret Chamber)":
+    # --- SECURITY CHECK ---
+    if not st.session_state.secret_unlocked:
+        st.title("🔒 พื้นที่หวงห้าม (Restricted Area)")
+        st.markdown("""
+        <div class="login-box">
+            <h2 style="color:#FF4444;">⚠️ TOP SECRET ⚠️</h2>
+            <p style="color:#ccc;">กรุณายืนยันตัวตนเพื่อเข้าถึงข้อมูลระดับสูง</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        c1, c2, c3 = st.columns([1, 2, 1])
+        with c2:
+            with st.form("secret_login"):
+                password = st.text_input("🔑 คำถาม: ใครคือผู้คิดสูตร?", type="password")
+                submit_btn = st.form_submit_button("ปลดล็อค (Unlock)", use_container_width=True)
+                
+                if submit_btn:
+                    if password == "root":
+                        st.session_state.secret_unlocked = True
+                        st.success("✅ Access Granted! ยินดีต้อนรับครับนายท่าน")
+                        time.sleep(1)
+                        st.rerun()
+                    else:
+                        st.error("❌ Access Denied! รหัสผ่านผิดพลาด")
+
+    else:
+        # --- UNLOCKED CONTENT ---
+        st.title("🔑 ห้องแห่งความลับ (Secret Chamber)")
+        st.caption("เผยความลับเบื้องหลังทุกสูตรคำนวณแบบเจาะลึก (ภาษาชาวบ้าน)")
+        
+        st.markdown("""
+        <div style="background:#222; padding:20px; border-radius:15px; border-left:5px solid #FFD700; margin-bottom:20px;">
+            <h3>📜 คัมภีร์สูตรมหาประลัย (6 Gods)</h3>
+            <p style="color:#ccc;">
+                นี่คือ "ไส้ใน" ของ 6 สูตรหลักที่เราใช้คำนวณครับ หลักการคือการเอา <b>ตำแหน่งต่างๆ ของรางวัลที่ 1 และเลขท้าย 3 ตัว (หน้า/หลัง)</b> 
+                ในงวดที่แล้ว มาบวกกันตามสูตรลับเฉพาะ แล้วเดินแต้มเพิ่มเพื่อหาเลขเด่น
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+
+        c1, c2 = st.columns(2)
+        
+        with c1:
+            st.markdown(f"""
+            <div class="secret-card" style="border-left:4px solid #00FF7F;">
+                <div class="secret-formula-title">1. คู่หูพารวย (Lucky)</div>
+                <div class="secret-eq-box">
+                    <div class="secret-hl">หลักสิบ:</div>
+                    <span style="color:#aaa;">สิบล่าง + (ร้อยหน้า1 x3) + (หน่วยหน้า2 x2) + ร้อยหลัง1 + (ร้อยหลัง2 x2) + (สิบหลัง2 x3) + 9</span>
+                    <br><span class="secret-step">⏩ เดินแต้ม: +0, +1, +5</span>
+                </div>
+                <div class="secret-eq-box">
+                    <div class="secret-hl">หลักหน่วย:</div>
+                    <span style="color:#aaa;">(พัน x2) + (ร้อย x2) + สิบ + (หน่วย x2) + ร้อยหลัง2 + 7</span>
+                    <br><span class="secret-step">⏩ เดินแต้ม: +0, +2</span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            st.markdown(f"""
+            <div class="secret-card" style="border-left:4px solid #FFD700;">
+                <div class="secret-formula-title">2. จักรพรรดิ (Emperor)</div>
+                <div class="secret-eq-box">
+                    <div class="secret-hl">หลักสิบ:</div>
+                    <span style="color:#aaa;">หมื่น + (พัน x4) + (สิบล่าง x3) + (สิบหน้า1 x2) + (หน่วยหน้า2 x2) + สิบหลัง1 + 6</span>
+                    <br><span class="secret-step">⏩ เดินแต้ม: +1, +3, +8</span>
+                </div>
+                <div class="secret-eq-box">
+                    <div class="secret-hl">หลักหน่วย:</div>
+                    <span style="color:#aaa;">(แสน x4) + (ร้อยหน้า2 x2) + (สิบหน้า2 x2) + (ร้อยหลัง1 x3) + 0</span>
+                    <br><span class="secret-step">⏩ เดินแต้ม: +4, +8</span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+            st.markdown(f"""
+            <div class="secret-card" style="border-left:4px solid #FF4444;">
+                <div class="secret-formula-title">3. มหาเทพ (God Wealth)</div>
+                <div class="secret-eq-box">
+                    <div class="secret-hl">หลักสิบ:</div>
+                    <span style="color:#aaa;">(ร้อย x4) + สิบหน้า1 + (ร้อยหน้า2 x4) + สิบหลัง1 + (ร้อยหลัง2 x3) + 4</span>
+                    <br><span class="secret-step">⏩ เดินแต้ม: +1, +7, +9</span>
+                </div>
+                <div class="secret-eq-box">
+                    <div class="secret-hl">หลักหน่วย:</div>
+                    <span style="color:#aaa;">(ร้อย x2) + (สิบ x5) + (หน่วยล่าง x5) + (ร้อยหน้า1 x4) + สิบหน้า1 + หน่วยหน้า1 + (ร้อยหน้า2 x2) + 9</span>
+                    <br><span class="secret-step">⏩ เดินแต้ม: +0, +5</span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        with c2:
+            st.markdown(f"""
+            <div class="secret-card" style="border-left:4px solid #AAAAAA;">
+                <div class="secret-formula-title">4. มหาโหด (Brutal Sage)</div>
+                <div class="secret-eq-box">
+                    <div class="secret-hl">หลักสิบ:</div>
+                    <span style="color:#aaa;">(หมื่น x3) + (สิบ x6) + (หน่วย x6) + (หน่วยล่าง x7) + (หน่วยหน้า1 x2) + (หน่วยหน้า2 x6) + (ร้อยหลัง1 x2) + 4</span>
+                    <br><span class="secret-step">⏩ เดินแต้ม: +3, +5, +6</span>
+                </div>
+                <div class="secret-eq-box">
+                    <div class="secret-hl">หลักหน่วย:</div>
+                    <span style="color:#aaa;">(แสน x4) + (หมื่น x4) + (สิบ x4) + (หน่วย x2) + (ร้อยหน้า1 x7) + (สิบหน้า2 x2) + (หน่วยหน้า2 x3) + 0</span>
+                    <br><span class="secret-step">⏩ เดินแต้ม: +0, +9</span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+            st.markdown(f"""
+            <div class="secret-card" style="border-left:4px solid #00BFFF;">
+                <div class="secret-formula-title">5. อมตะนิรันดร์ (Immortal)</div>
+                <div class="secret-eq-box">
+                    <div class="secret-hl">หลักสิบ:</div>
+                    <span style="color:#aaa;">(สิบ x4) + (หน่วยล่าง x8) + (สิบหน้า1 x5) + (สิบหน้า2 x2) + (สิบหลัง1 x5) + (ร้อยหลัง2 x3) + (สิบหลัง2 x2) + (หน่วยหลัง2 x6) + 2</span>
+                    <br><span class="secret-step">⏩ เดินแต้ม: +3, +7, +9</span>
+                </div>
+                <div class="secret-eq-box">
+                    <div class="secret-hl">หลักหน่วย:</div>
+                    <span style="color:#aaa;">หมื่น + ร้อย + (สิบ x4) + (สิบล่าง x9) + ร้อยหน้า2 + (สิบหน้า2 x3) + (ร้อยหลัง2 x4) + 9</span>
+                    <br><span class="secret-step">⏩ เดินแต้ม: +2, +6</span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+            st.markdown(f"""
+            <div class="secret-card" style="border-left:4px solid #9932CC;">
+                <div class="secret-formula-title">6. พลังจักรวาล (Cosmic)</div>
+                <div class="secret-eq-box">
+                    <div class="secret-hl">หลักสิบ:</div>
+                    <span style="color:#aaa;">(หมื่น x7) + (หน่วย x2) + (สิบล่าง x7) + (หน่วยหน้า1 x7) + (ร้อยหลัง1 x7) + (สิบหลัง1 x7) + 3</span>
+                    <br><span class="secret-step">⏩ เดินแต้ม: +1, +3, +7</span>
+                </div>
+                <div class="secret-eq-box">
+                    <div class="secret-hl">หลักหน่วย:</div>
+                    <span style="color:#aaa;">(สิบล่าง x6) + (สิบหน้า1 x4) + ร้อยหลัง1 + (สิบหลัง1 x2) + 8</span>
+                    <br><span class="secret-step">⏩ เดินแต้ม: +2, +4</span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        st.markdown("---")
+        st.markdown("""
+        <div class="secret-layer-box">
+            <h3 style="color:#00BFFF; border-bottom:1px solid #444; padding-bottom:10px;">🧬 ความลับ: สูตรลับ 5 ชั้น (AI Spin) หาหลักสิบยังไง?</h3>
+            <p style="color:#eee; font-size:16px;">
+                สูตรนี้ <b>"ไม่ได้ใช้การบวกเลข"</b> เหมือน 6 สูตรข้างบนครับ แต่มันคือการใช้ AI (Artificial Intelligence) 
+                สแกนหา <b>"พฤติกรรมของตัวเลข" (Behavior Pattern)</b> จากสถิติย้อนหลัง โดยเจาะลึก 5 ชั้น (Layers) ดังนี้:
+            </p>
+            <div style="background:#111; padding:15px; border-radius:10px; margin-top:10px;">
+                <p style="color:#FFD700;">🔍 <b>คำถามที่ AI ถามสถิติเก่า:</b> "เมื่องวดที่แล้วออกเลขนี้... งวดต่อไปเลข <b>หลักสิบ</b> อะไรที่ชอบตามมา?"</p>
+                <ul style="color:#ccc; line-height:1.8;">
+                    <li><b>ชั้นที่ 1 (Top Ten Base):</b> เช็คจาก "หลักสิบบน" งวดที่แล้ว -> หาคู่เหมือนในอดีต -> ดูว่าตอนนั้นหลักสิบออกอะไรบ่อยสุด</li>
+                    <li><b>ชั้นที่ 2 (Top Unit Base):</b> เช็คจาก "หลักหน่วยบน" งวดที่แล้ว -> หาคู่เหมือน -> ดูผลลัพธ์หลักสิบ</li>
+                    <li><b>ชั้นที่ 3 (Bot Ten Base):</b> เช็คจาก "หลักสิบล่าง" งวดที่แล้ว -> หาคู่เหมือน -> ดูผลลัพธ์หลักสิบ</li>
+                    <li><b>ชั้นที่ 4 (Bot Unit Base):</b> เช็คจาก "หลักหน่วยล่าง" งวดที่แล้ว -> หาคู่เหมือน -> ดูผลลัพธ์หลักสิบ</li>
+                    <li><b>ชั้นที่ 5 (Lag Move):</b> เช็คจาก "หลักสิบบน ของงวดก่อนหน้า" (ย้อน 2 งวด) -> ดูแรงส่งตกกระทบ</li>
+                </ul>
+                <p style="color:#00FF7F; margin-top:10px;">
+                    ✅ <b>ผลลัพธ์:</b> AI จะเอาคะแนนความถี่จากทั้ง 5 ชั้นมารวมกัน ตัวเลขไหนได้คะแนนสูงสุด 3 อันดับแรก จะถูกคัดมาเป็น <b>"เลขเด่นหลักสิบ"</b> ครับ
+                </p>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        if st.button("🔒 ล็อคห้องความลับ (Logout)"):
+            st.session_state.secret_unlocked = False
+            st.rerun()
+
+# ==========================================
+# 🧪 ห้องวิจัยสูตร (Formula Lab)
+# ==========================================
+elif page == "🧪 ห้องวิจัยสูตร (Formula Lab)":
+    st.title("🧪 ห้องวิจัยสูตร (Formula Lab)")
+    st.caption("เจาะลึกที่มาของตัวเลข ดูสมการ และตรวจสอบความแม่นยำย้อนหลัง")
+    
+    if df.empty: st.error("No Data"); st.stop()
+    
+    # 1. Select Draw
+    draws = df['วันที่'].tolist()[::-1] 
+    selected_date = st.selectbox("📅 เลือกงวดที่ต้องการตรวจสอบ:", draws[:20]) 
+    idx = df[df['วันที่'] == selected_date].index[0]
+    
+    if idx == len(df)-1:
+        st.info("คุณเลือกงวดล่าสุด (ทำนายอนาคต) - ยังไม่มีผลรางวัลให้ตรวจ")
+        target_row = None
+    else:
+        target_row = df.iloc[idx+1] # Next draw (Result)
+        
+    curr_row = df.iloc[idx] # Input draw
+    
+    # 2. Input Data
+    st.markdown("### 🔢 ข้อมูลตั้งต้น (Input)")
+    c1, c2, c3, c4 = st.columns(4)
+    with c1: st.metric("รางวัลที่ 1", curr_row['รางวัลที่ 1'])
+    with c2: st.metric("2 ตัวล่าง", curr_row['2 ตัวล่าง'])
+    with c3: st.metric("3 ตัวหน้า", f"{curr_row['เลขท้าย 3 ตัว (1)']} - {curr_row['เลขท้าย 3 ตัว (2)']}")
+    with c4: st.metric("3 ตัวหลัง", f"{curr_row['เลขท้าย 3 ตัว (3)']} - {curr_row['เลขท้าย 3 ตัว (4)']}")
+    
+    st.divider()
+    
+    # 3. Formula Execution
+    p1, d2, f1, f2, b1, b2 = get_variables_god_mode(curr_row)
+    formulas = calculate_god_formulas(p1, d2, f1, f2, b1, b2)
+    
+    real_top = str(target_row['2 ตัวบน']).zfill(2) if target_row is not None else "??"
+    real_bot = str(target_row['2 ตัวล่าง']).zfill(2) if target_row is not None else "??"
+    
+    st.markdown("### 🔬 ผลการวิเคราะห์แยกรายสูตร")
+    
+    c_form1, c_form2 = st.columns(2)
+    cols_ref = [c_form1, c_form2]
+    
+    for i, (key, val) in enumerate(formulas.items()):
+        pairs = [f"{t}{u}" for t in val['tens'] for u in val['units']]
+        hit_status = "รอผล"; hit_color = "#888"
+        pair_html_list = []
+        
+        # Check Hit Logic
+        if target_row is not None:
+            is_top = real_top in pairs; is_bot = real_bot in pairs
+            if is_top and is_bot: 
+                hit_status = "✅ เข้าทั้ง บน/ล่าง"; hit_color = "#00FF7F"
+            elif is_top: 
+                hit_status = "✅ เข้าบน"; hit_color = "#00FF7F"
+            elif is_bot: 
+                hit_status = "✅ เข้าล่าง"; hit_color = "#00FF7F"
+            else: 
+                hit_status = "❌ หลุด"; hit_color = "#FF4444"
+            
+            # Create HTML for pairs
+            for p in pairs:
+                if p == real_top or p == real_bot:
+                    pair_html_list.append(f"<span class='lab-item-hit'>{p}</span>")
+                else:
+                    pair_html_list.append(f"<span class='lab-item-normal'>{p}</span>")
+        else:
+            # Future draw
+            pair_html_list = [f"<span class='lab-item-normal'>{p}</span>" for p in pairs]
+            
+        display_html = "".join(pair_html_list)
+            
+        with cols_ref[i%2]:
+            # HTML BLOCK FIXED (Left Aligned)
+            st.markdown(f"""
+<div class="lab-card" style="border-left: 5px solid {val['color']}">
+<div class="lab-header">
+<div class="lab-title" style="color:{val['color']}">{val['name']}</div>
+<div class="lab-result-chk" style="color:{hit_color}; border-color:{hit_color};">{hit_status}</div>
+</div>
+<div style="font-size:12px; color:#aaa; margin-bottom:4px;">สมการหลักสิบ:</div>
+<div class="lab-eq">{val['eq_t']}</div>
+<div style="font-size:12px; color:#aaa; margin-bottom:4px;">สมการหลักหน่วย:</div>
+<div class="lab-eq">{val['eq_u']}</div>
+<div class="lab-res-box">
+<div class="lab-digit" style="color:{val['color']}">{val['tens']}</div>
+<div style="font-size:20px; font-weight:bold; color:#666;">X</div>
+<div class="lab-digit" style="color:{val['color']}">{val['units']}</div>
+</div>
+<div class="lab-pairs-container">{display_html}</div>
+</div>
+""", unsafe_allow_html=True)
+            
+    if target_row is not None:
+        st.markdown(f"""
+        <div class="prediction-box">
+            <div class="pred-title">เฉลยงวดถัดไป ({target_row['วันที่']})</div>
+            <span style="font-size:24px; margin-right:20px; color:#CCC;">บน: <b style="color:#00FF7F; font-size:40px;">{real_top}</b></span>
+            <span style="font-size:24px; color:#CCC;">ล่าง: <b style="color:#00FF7F; font-size:40px;">{real_bot}</b></span>
+        </div>""", unsafe_allow_html=True)
+    else:
+        # Show Big Prediction for Next Draw
+        all_p = []
+        for k, v in formulas.items():
+            all_p.extend([f"{t}{u}" for t in v['tens'] for u in v['units']])
+        top_consensus = Counter(all_p).most_common(3)
+        cons_html = " ".join([f"<span style='color:#FFD700; margin:0 10px;'>{n[0]}</span>" for n in top_consensus])
+        
+        st.markdown(f"""
+        <div class="prediction-box">
+            <div class="pred-title">🔮 รอผลเก็งงวดนี้ (Top 3 มาแรง)</div>
+            <div class="pred-pairs">{cons_html}</div>
+        </div>""", unsafe_allow_html=True)
+
+# ==========================================
+# 🔍 นักสืบตัวเลข
 # ==========================================
 elif page == "🔍 นักสืบตัวเลข":
     st.title("🕵️‍♂️ นักสืบตัวเลข (Sherlock Mode)")
@@ -931,10 +1151,10 @@ elif page == "🔍 นักสืบตัวเลข":
                 st.bar_chart(bar_data.set_index('วัน'), color="#FFD700")
                 if target_col != '3_bottom_mixed':
                     st.write("**🔮 เลขตามตูด (Next Mover):** งวดถัดไปมักออกเลขอะไร?")
-                    next_draw_numbers = []; target_col_real = 'รางวัลที่ 1' if target_col == '3_top' else target_col
+                    next_draw_numbers = []
                     for idx in found.index:
                         if idx + 1 < len(data_df):
-                            val = data_df.iloc[idx + 1][target_col_real]
+                            val = data_df.iloc[idx + 1]['รางวัลที่ 1' if target_col == '3_top' else target_col]
                             if target_col == '3_top': val = val[-3:]
                             next_draw_numbers.append(val)
                     if next_draw_numbers:
@@ -960,12 +1180,11 @@ elif page == "🔍 นักสืบตัวเลข":
     elif st.session_state.get('search_btn_detective', 0) > 0: st.error("กรุณากรอกตัวเลขที่ต้องการสืบ")
     
     st.divider()
-    # --- Moved History Data Here ---
     with st.expander("📂 ฐานข้อมูลผลรางวัลย้อนหลัง (Full Database)", expanded=False):
         st.dataframe(df.iloc[::-1][['วันที่', 'รางวัลที่ 1', '2 ตัวล่าง', 'เลขท้าย 3 ตัว (1)', 'เลขท้าย 3 ตัว (2)', 'เลขท้าย 3 ตัว (3)', 'เลขท้าย 3 ตัว (4)']], use_container_width=True)
 
 # ==========================================
-# 🧬 หน้าที่ 3: สูตรลับ 5 ชั้น (AI Spin)
+# 🧬 สูตรลับ 5 ชั้น (AI Spin)
 # ==========================================
 elif page == "🧬 สูตรลับ 5 ชั้น (AI Spin)":
     st.title("🧬 สูตรหวย 5 ชั้น (AI Focus Spin)")
@@ -1072,7 +1291,7 @@ elif page == "🧬 สูตรลับ 5 ชั้น (AI Spin)":
     else: st.info("👈 กดปุ่ม 'เริ่มคำนวณสูตร' ด้านบนเพื่อเริ่มกระบวนการ")
 
 # ==========================================
-# 💖 หน้าที่ 5: รวมสูตรน้องพารวย
+# 💖 รวมสูตรน้องพารวย
 # ==========================================
 elif page == "💖 รวมสูตรน้องพารวย":
     if 'R1_Lakh' not in df.columns: st.error("❌ ข้อผิดพลาดในการโหลดข้อมูลหลัก!"); st.stop()
@@ -1095,7 +1314,6 @@ elif page == "💖 รวมสูตรน้องพารวย":
     with col_run_2:
         st.subheader("รายละเอียดเชิงลึก")
         st.info(f"💡 **สูตรวิ่งหลัก:** นี่คือสูตรสี่ตัวยืนที่มีความแม่นยำสูงถึง **{calculated_accuracy_run:.2f}%**")
-        # --- ย้ายประวัติมาไว้ตรงนี้ ---
         with st.expander("📜 ดูประวัติการเข้า/หลุด 30 งวดล่าสุด (Backtest)", expanded=False):
             st.dataframe(backtest_df_run.tail(30).iloc[::-1], use_container_width=True, hide_index=True)
     
@@ -1127,11 +1345,7 @@ elif page == "💖 รวมสูตรน้องพารวย":
             st.markdown(f"<small>Top 3: {top_digits_str}</small>", unsafe_allow_html=True)
             
     st.markdown("---"); st.markdown("## 🔮 สูตร 4: ชุดตามตูด (Next Mover Predictor)"); st.markdown("---")
-    
-    # --- New: Default to Latest R1_Sib (สิบบน) ---
-    last_row = df.iloc[-1]
-    default_leading = str(int(last_row['R1_Sib']))
-    
+    last_row = df.iloc[-1]; default_leading = str(int(last_row['R1_Sib']))
     col_input, col_btn = st.columns([1, 4])
     with col_input: leading_digit_str = st.text_input("เลขนำ (หลักสิบบนล่าสุด):", max_chars=1, value=default_leading)
     st.write("") 
@@ -1146,7 +1360,7 @@ elif page == "💖 รวมสูตรน้องพารวย":
     else: st.warning("กรุณากรอกตัวเลขนำ (0-9) เพียง 1 หลักเท่านั้นครับ")
 
 # ==========================================
-# 🎣 หน้าที่ 6: สูตรฟันปลา & สามเหลี่ยม
+# 🎣 สูตรฟันปลา & สามเหลี่ยม
 # ==========================================
 elif page == "🎣 สูตรฟันปลา & สามเหลี่ยม":
     if df.empty: st.error("โหลดข้อมูลไม่ได้"); st.stop()
@@ -1160,22 +1374,24 @@ elif page == "🎣 สูตรฟันปลา & สามเหลี่ย�
     
     st.markdown("## 🥇 สูตร 1: ฟันปลา 3 ตัว (Triple Fhan Pla)")
     st.caption(f"เน้น: เลขวิ่ง 3 ตัว | ตรวจสอบทั้งหมด {fp_stats['Total']} งวด")
-    with st.expander("🔍 กดเพื่อดูวิธีกระทบเลข (Visual Calculation)", expanded=True):
-        col_viz, col_desc = st.columns([2, 1])
-        with col_viz:
-            st.markdown("##### แผนภาพการบวก:")
-            html_fhan = f"""
+    
+    # Layout Split
+    c_viz, c_info = st.columns([1.5, 1])
+    
+    with c_viz:
+        st.markdown(f"""
+        <div class="fp-card">
+            <div style="text-align:center; color:#aaa; margin-bottom:10px;">แผนภาพการบวก (Pyramid Logic)</div>
             <div class='pyramid-container'>
-                <div style='color:#AAA; margin-bottom:5px;'>หลักหมื่น + สิบ(ร.1) + หน่วยล่าง + 7</div>
                 <div class='pyramid-row'>
                     <div class='pyramid-ball'>{int(df.iloc[-1]['R1_Muen'])}</div>
                     <div class='pyramid-ball'>{int(df.iloc[-1]['R1_Sib'])}</div>
                     <div class='pyramid-ball'>{int(df.iloc[-1]['Bot_Nui'])}</div>
-                    <div class='pyramid-ball' style='background:grey;'>7</div>
+                    <div class='pyramid-ball' style='background:radial-gradient(circle at 30% 30%, #999, #555); border-color:#777;'>7</div>
                 </div>
                 <div class='connector-line'>&nbsp;&nbsp;🔻&nbsp;&nbsp;</div>
                 <div class='pyramid-row'>
-                    <div class='pyramid-ball result' style='background: gold; color:black;'>{fp_stats['Base']}</div>
+                    <div class='pyramid-ball result' style='background: gold; color:black; border-color:#fff;'>{fp_stats['Base']}</div>
                 </div>
                 <div class='connector-line'>&nbsp;แตกตัว (+0, +1, +2)&nbsp;</div>
                 <div class='pyramid-row'>
@@ -1184,68 +1400,61 @@ elif page == "🎣 สูตรฟันปลา & สามเหลี่ย�
                     <div class='pyramid-ball result'>{fp_stats['Digits'][2]}</div>
                 </div>
             </div>
-            """
-            st.markdown(html_fhan, unsafe_allow_html=True)
-        with col_desc:
-            st.markdown("#### เลขเด่นงวดนี้")
-            st.markdown(f"<div style='font-size:48px; font-weight:bold; color:#00FF7F; text-align:center;'>{digits_str_fhan_pla}</div>", unsafe_allow_html=True)
-            st.markdown("##### 📊 สถิติความแม่นยำ")
-            html_stats = f"""
-            <div class='fp-stats-grid'>
-                <div class='fp-stat-item'><div class='fp-stat-label'>🎯 8 ตำแหน่ง</div><div class='fp-stat-value'>{fp_stats['Acc_8Pos']:.2f}%</div></div>
-                <div class='fp-stat-item'><div class='fp-stat-label'>☁️ 3 ตัวบน</div><div class='fp-stat-value'>{fp_stats['Acc_3Top']:.2f}%</div></div>
-                <div class='fp-stat-item'><div class='fp-stat-label'>👆 2 ตัวบน</div><div class='fp-stat-value'>{fp_stats['Acc_2Top']:.2f}%</div></div>
-                <div class='fp-stat-item'><div class='fp-stat-label'>👇 2 ตัวล่าง</div><div class='fp-stat-value'>{fp_stats['Acc_2Bot']:.2f}%</div></div>
+        </div>""", unsafe_allow_html=True)
+
+    with c_info:
+        st.markdown(f"""
+        <div class="fp-card">
+            <div class="f-header"><div class="f-title">สรุปเลขเด่นงวดนี้</div></div>
+            <div class="f-pair-box" style="margin-top:0;">{digits_str_fhan_pla}</div>
+            <div style="margin-top:20px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                    <span>🎯 เข้า 8 ตำแหน่ง</span>
+                    <span style="color:#00FF7F; font-weight:bold;">{fp_stats['Acc_8Pos']:.2f}%</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                    <span>☁️ เข้า 3 ตัวบน</span>
+                    <span style="color:#FFD700; font-weight:bold;">{fp_stats['Acc_3Top']:.2f}%</span>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                    <span>👇 เข้า 2 ตัวล่าง</span>
+                    <span style="color:#00BFFF; font-weight:bold;">{fp_stats['Acc_2Bot']:.2f}%</span>
+                </div>
             </div>
-            """
-            st.markdown(html_stats, unsafe_allow_html=True)
+        </div>""", unsafe_allow_html=True)
 
     st.markdown("---")
     st.markdown("## 🔺 สูตร 2: สามเหลี่ยมทองคำ (Original Pyramid)")
-    st.caption(f"เน้น: เลขวิ่งตัวเดียว | ตรวจสอบทั้งหมด {pyr_stats['Total']} งวด")
-    with st.expander("🔍 กดเพื่อดูภาพสามเหลี่ยมห้อยลงมา (Full Pyramid)", expanded=False):
-        col_p_viz, col_p_desc = st.columns([2, 1])
-        with col_p_viz:
-            pyramid_html = generate_pyramid_html(pyr_stats['Layers'])
-            st.markdown(pyramid_html, unsafe_allow_html=True)
-        with col_p_desc:
-            st.markdown("#### ผลลัพธ์สุดท้าย")
-            st.markdown(f"<div style='font-size:48px; font-weight:bold; color:#FFD700; text-align:center;'>{pyr_stats['Digit']}</div>", unsafe_allow_html=True)
-            st.markdown("##### 📊 สถิติความแม่นยำ")
-            html_stats_pyr = f"""
-            <div class='fp-stats-grid'>
-                <div class='fp-stat-item'><div class='fp-stat-label'>🎯 8 ตำแหน่ง</div><div class='fp-stat-value'>{pyr_stats['Acc_8Pos']:.2f}%</div></div>
-                <div class='fp-stat-item'><div class='fp-stat-label'>☁️ 3 ตัวบน</div><div class='fp-stat-value'>{pyr_stats['Acc_3Top']:.2f}%</div></div>
-                <div class='fp-stat-item'><div class='fp-stat-label'>👆 2 ตัวบน</div><div class='fp-stat-value'>{pyr_stats['Acc_2Top']:.2f}%</div></div>
-                <div class='fp-stat-item'><div class='fp-stat-label'>👇 2 ตัวล่าง</div><div class='fp-stat-value'>{pyr_stats['Acc_2Bot']:.2f}%</div></div>
-            </div>
-            """
-            st.markdown(html_stats_pyr, unsafe_allow_html=True)
+    
+    c_viz2, c_info2 = st.columns([2, 1])
+    with c_viz2:
+        pyramid_html = generate_pyramid_html(pyr_stats['Layers'])
+        st.markdown(pyramid_html, unsafe_allow_html=True)
+    with c_info2:
+        st.markdown(f"""
+        <div class="fp-card">
+            <div class="f-header"><div class="f-title">ผลลัพธ์สุดท้าย</div></div>
+            <div class="f-pair-box" style="font-size:60px; color:#FFD700;">{pyr_stats['Digit']}</div>
+            <div style="margin-top:15px; text-align:center; color:#aaa;">ความแม่นยำ (8 จุด): {pyr_stats['Acc_8Pos']:.2f}%</div>
+        </div>""", unsafe_allow_html=True)
 
     st.markdown("---")
     st.markdown("## 🌋 สูตร 3: มหาพีระมิด (Grand Pyramid)")
-    st.caption("เน้น: เลขวิ่งตัวเดียว | ใช้ข้อมูลครบทั้งรางวัลที่ 1 และ 2 ตัวล่าง (8 หลักตั้งต้น)")
-    with st.expander("🔍 กดเพื่อดูมหาพีระมิด 8 ชั้น", expanded=False):
-        col_g_viz, col_g_desc = st.columns([2, 1])
-        with col_g_viz:
-            grand_html = generate_pyramid_html(grand_stats['Layers'])
-            st.markdown(grand_html, unsafe_allow_html=True)
-        with col_g_desc:
-            st.markdown("#### ผลลัพธ์สุดท้าย")
-            st.markdown(f"<div style='font-size:48px; font-weight:bold; color:#FFD700; text-align:center;'>{grand_stats['Digit']}</div>", unsafe_allow_html=True)
-            st.markdown("##### 📊 สถิติความแม่นยำ")
-            html_stats_grand = f"""
-            <div class='fp-stats-grid'>
-                <div class='fp-stat-item'><div class='fp-stat-label'>🎯 8 ตำแหน่ง</div><div class='fp-stat-value'>{grand_stats['Acc_8Pos']:.2f}%</div></div>
-                <div class='fp-stat-item'><div class='fp-stat-label'>☁️ 3 ตัวบน</div><div class='fp-stat-value'>{grand_stats['Acc_3Top']:.2f}%</div></div>
-                <div class='fp-stat-item'><div class='fp-stat-label'>👆 2 ตัวบน</div><div class='fp-stat-value'>{grand_stats['Acc_2Top']:.2f}%</div></div>
-                <div class='fp-stat-item'><div class='fp-stat-label'>👇 2 ตัวล่าง</div><div class='fp-stat-value'>{grand_stats['Acc_2Bot']:.2f}%</div></div>
-            </div>
-            """
-            st.markdown(html_stats_grand, unsafe_allow_html=True)
+    
+    c_viz3, c_info3 = st.columns([2, 1])
+    with c_viz3:
+        grand_html = generate_pyramid_html(grand_stats['Layers'])
+        st.markdown(grand_html, unsafe_allow_html=True)
+    with c_info3:
+        st.markdown(f"""
+        <div class="fp-card">
+            <div class="f-header"><div class="f-title">ผลลัพธ์สุดท้าย</div></div>
+            <div class="f-pair-box" style="font-size:60px; color:#FFD700;">{grand_stats['Digit']}</div>
+            <div style="margin-top:15px; text-align:center; color:#aaa;">ความแม่นยำ (8 จุด): {grand_stats['Acc_8Pos']:.2f}%</div>
+        </div>""", unsafe_allow_html=True)
 
 # ==========================================
-# 💀 หน้าที่ 7: Killer Zone (New!)
+# 💀 โซนเลขดับ (Killer Zone)
 # ==========================================
 elif page == "💀 โซนเลขดับ (Killer Zone)":
     if df.empty: st.error("โหลดข้อมูลไม่ได้"); st.stop()
