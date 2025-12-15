@@ -11,14 +11,12 @@ import altair as alt
 # ---------------------------------------------------------
 # 1. ตั้งค่าหน้าเว็บ & ระบบนำทาง
 # ---------------------------------------------------------
-st.set_page_config(layout="wide", page_title="Lotto Master V.HomeAI")
+st.set_page_config(layout="wide", page_title="Lotto Master V.GodFix")
 
 ALL_PAGES = [
-    "🏠 หน้าแรก (Dashboard)", 
-    "🏠 ตรวจหวย", 
+    "🏠 หน้าแรก (4 สูตรมหาประลัย)", 
     "🔍 นักสืบตัวเลข", 
     "🧬 สูตรลับ 5 ชั้น (AI Spin)", 
-    "🎯 สี่ตัวยืน (89.28%)", 
     "💖 รวมสูตรน้องพารวย", 
     "🎣 สูตรฟันปลา & สามเหลี่ยม", 
     "💀 โซนเลขดับ (Killer Zone)"
@@ -32,122 +30,150 @@ def navigate_to(page_name):
     st.rerun()
 
 # ---------------------------------------------------------
-# 2. CSS Style
+# 2. CSS Style (แก้ไขเรื่องตัวหนังสือทับกันเรียบร้อย!)
 # ---------------------------------------------------------
 custom_css = """
 <style>
-/* Global Font */
-h1, h2, h3, h4, .stButton, .stTextInput, .stAlert, p, div {
+@import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;900&display=swap');
+
+/* Global Font - แก้ไขไม่ให้กระทบโครงสร้างภายใน */
+html, body, [class*="css"] {
     font-family: 'Kanit', sans-serif;
 }
 
-/* --- HOME PAGE STYLES --- */
-.hero-box {
-    background: linear-gradient(135deg, #FFD700 0%, #FDB931 100%);
-    padding: 20px;
-    border-radius: 15px;
-    text-align: center;
-    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
-    margin-bottom: 20px;
-    color: #333;
-}
-.hero-title { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
-.hero-number { font-size: 64px; font-weight: 900; line-height: 1; text-shadow: 2px 2px 4px rgba(0,0,0,0.2); }
-.hero-sub { font-size: 18px; margin-top: 10px; }
-
-.stat-grid-box {
+/* ปรับแต่งหัวข้อ Expander ให้ชัดเจน ไม่ทับกัน */
+.streamlit-expanderHeader {
+    font-family: 'Kanit', sans-serif !important;
+    font-weight: bold !important;
+    font-size: 16px !important;
     background-color: #2e2e2e;
-    border: 1px solid #444;
+    border-radius: 8px;
+    color: #FFD700 !important;
+}
+
+/* --- HERO SECTION --- */
+.hero-container {
+    background: radial-gradient(circle at center, #2b2b2b 0%, #1a1a1a 100%);
+    border: 2px solid #444;
+    border-radius: 20px;
+    padding: 30px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    margin-bottom: 25px;
+    position: relative;
+    overflow: hidden;
+}
+.hero-container::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%; width: 200%; height: 200%;
+    background: radial-gradient(circle, rgba(255,215,0,0.1) 0%, transparent 60%);
+    animation: shine 10s infinite linear;
+}
+@keyframes shine { from {transform: rotate(0deg);} to {transform: rotate(360deg);} }
+
+.hero-title {
+    color: #AAA;
+    font-size: 18px;
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+}
+.hero-number {
+    font-size: 90px;
+    font-weight: 900;
+    line-height: 1;
+    background: linear-gradient(to bottom, #FFF8DC 0%, #FFD700 50%, #DAA520 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));
+    margin-bottom: 15px;
+}
+.hero-sub-grid {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin-top: 10px;
+}
+.hero-sub-item {
+    background: rgba(255,255,255,0.05);
+    padding: 10px 20px;
     border-radius: 10px;
-    padding: 15px;
-    text-align: center;
-    height: 100%;
+    border: 1px solid #333;
 }
-.grid-title { color: #AAA; font-size: 14px; margin-bottom: 5px; }
+.hero-sub-label { color: #888; font-size: 14px; }
+.hero-sub-val { color: #FFF; font-size: 24px; font-weight: bold; }
+
+/* --- FORMULA CARDS --- */
+.formula-card-home { 
+    background-color: #222; 
+    padding: 15px; 
+    margin-bottom: 10px; 
+    border-radius: 12px; 
+    border: 1px solid #333; 
+    text-align: left;
+    transition: all 0.3s;
+    position: relative;
+}
+.formula-card-home:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); border-color: #555; }
+.f-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 8px; }
+.f-title { font-weight: bold; font-size: 18px; }
+.f-stats-badge { background: #111; color: #aaa; font-size: 10px; padding: 2px 6px; border-radius: 4px; border: 1px solid #333; }
+.f-row { display: flex; align-items: center; margin-bottom: 5px; }
+.f-label { font-size: 12px; color: #888; width: 60px; }
+
+.f-val-badge { 
+    background-color: #000; 
+    color: #ccc; 
+    padding: 2px 8px; 
+    border-radius: 4px; 
+    font-weight: normal; 
+    font-size: 12px; 
+    border: 1px solid #444;
+    margin-right: 4px;
+}
+
+.f-pair-box {
+    margin-top: 8px;
+    background-color: rgba(255, 215, 0, 0.05);
+    padding: 10px;
+    border-radius: 8px;
+    color: #FFD700;
+    font-weight: 900;
+    font-size: 28px; 
+    text-align: center;
+    border: 1px dashed #555;
+    letter-spacing: 2px;
+}
+
+/* --- SIDEBAR STATS --- */
+.sidebar-stat-box { background-color: #262626; padding: 12px; border-radius: 10px; margin-bottom: 10px; text-align: center; border: 1px solid #444; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+.sidebar-stat-num { font-size: 28px; font-weight: 900; color: #FFD700; line-height: 1.2; }
+.sidebar-stat-label { font-size: 12px; color: #aaa; margin-bottom: 2px; }
+
+/* --- CONSENSUS & KILLER --- */
+.consensus-box { background: linear-gradient(135deg, #3b0000 0%, #1a0000 100%); border: 1px solid #ff4444; padding: 20px; border-radius: 15px; text-align: center; height: 100%; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 0 15px rgba(255, 68, 68, 0.1); }
+.consensus-title { color: #ff4444; font-size: 20px; font-weight: bold; margin-bottom: 5px; }
+.consensus-number { font-size: 90px; font-weight: 900; color: #FFD700; text-shadow: 0 0 20px rgba(255, 215, 0, 0.3); line-height: 0.9; }
+
+.killer-container { background: #1a0505; border: 1px solid #550000; border-radius: 15px; padding: 15px; text-align: center; height: 100%; display: flex; flex-direction: column; justify-content: space-between; }
+.killer-main-title { color: #ff4444; font-weight: bold; font-size: 16px; }
+.killer-main-digit { font-size: 56px; font-weight: 900; color: #ff4444; line-height: 1; text-shadow: 0 0 10px rgba(255, 0, 0, 0.3); }
+.killer-sub-grid { display: flex; justify-content: space-around; margin-top: 10px; border-top: 1px solid #330000; padding-top: 10px; }
+.killer-sub-item { text-align: center; }
+.killer-sub-val { font-size: 20px; font-weight: bold; color: #ff8888; }
+.killer-sub-lbl { font-size: 10px; color: #884444; }
+
+/* --- OTHER --- */
+.stat-grid-box { background-color: #2e2e2e; border: 1px solid #444; border-radius: 10px; padding: 15px; text-align: center; height: 100%; }
 .grid-val-big { font-size: 32px; font-weight: bold; color: #00FF7F; }
-.grid-val-sub { font-size: 14px; color: #FFD700; }
-
-.leaderboard-row {
-    display: flex; justify-content: space-between; align-items: center;
-    background-color: #333; padding: 10px 15px; margin-bottom: 5px; border-radius: 8px;
-}
-.lb-rank { font-size: 18px; font-weight: bold; width: 30px; }
-.lb-name { flex-grow: 1; font-weight: bold; color: white; }
-.lb-acc { font-weight: bold; color: #00FF7F; }
-
-/* AI Pick Box */
-.ai-pick-container {
-    display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 10px;
-}
-.ai-pick-item {
-    background: linear-gradient(45deg, #00FF7F, #008080);
-    color: white;
-    font-size: 36px;
-    font-weight: bold;
-    width: 80px;
-    height: 80px;
-    line-height: 80px;
-    text-align: center;
-    border-radius: 50%;
-    box-shadow: 0 0 10px rgba(0, 255, 127, 0.5);
-    border: 3px solid #FFF;
-    animation: pulse 2s infinite;
-}
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
-}
-
-/* --- OTHER STYLES --- */
-.prize-1-box, .side-prize-box, .prize-2-digit, .prize-2-bottom, .prize-3-box {
-    text-align: center; padding: 15px; margin-bottom: 10px; border-radius: 10px; color: #333;
-}
-.prize-1-box { background-color: #FFD700; }
-.prize-1-number { font-size: 48px; font-weight: bold; }
-.side-prize-box { background-color: #C0C0C0; }
-.prize-2-digit { background-color: #ADD8E6; }
-.prize-2-bottom { background-color: #F08080; }
-.prize-3-box { background-color: #f0f0f0; font-weight: bold; }
-
-.main-box, .backup-box, .rolling-box {
-    border: 2px solid #333; padding: 10px; margin-bottom: 10px; text-align: center; border-radius: 8px; font-size: 48px; font-weight: bold; transition: all 0.3s;
-}
-.main-box { background-color: #4CAF50; color: white; border-color: #2E8B57; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
-.backup-box { background-color: #FF9800; color: white; border-color: #E65100; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-.summary-box { background-color: #333; padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 5px solid #00FF7F; color: white; font-size: 20px; }
-.rolling-box[style*="color:#FFD700;"] { font-size: 56px !important; border-width: 4px !important; }
-
-.stat-card { background-color: #444; padding: 10px; text-align: center; border-radius: 8px; margin-bottom: 10px; color: white; }
-.stat-val { font-size: 28px; font-weight: bold; color: #00FF7F; }
-.stat-label { font-size: 14px; color: #CCCCCC; }
-.follower-box { background-color: #555; padding: 10px 5px; text-align: center; border-radius: 5px; color: white; font-weight: bold; }
-.follower-desc { font-size: 12px; color: #FFD700; }
-
-.standing-digits { background-color: #333; padding: 25px; border-radius: 15px; border: 4px solid #00FF7F; text-align: center; margin-bottom: 20px; }
-.digits-display { font-size: 80px; font-weight: 900; color: #FFD700; line-height: 1; margin-top: 10px; }
-.puck-luk-box { background-color: #222; padding: 15px; border-radius: 10px; border-left: 5px solid #FFD700; margin-bottom: 15px; }
-.puck-luk-digit { font-size: 40px; font-weight: 900; color: #FFD700; }
-.next-mover-result { background-color: #444; padding: 10px; border-radius: 8px; text-align: center; margin: 5px; }
-.mover-num { font-size: 28px; font-weight: 900; color: #00FF7F; }
-.mover-count { font-size: 14px; color: #AAA; }
-
+.ai-pick-item { background: linear-gradient(45deg, #00FF7F, #008080); color: white; font-size: 36px; font-weight: bold; width: 80px; height: 80px; line-height: 80px; text-align: center; border-radius: 50%; margin: 0 auto; }
+.main-box, .backup-box, .rolling-box { border: 2px solid #333; padding: 10px; margin-bottom: 10px; text-align: center; border-radius: 8px; font-size: 48px; font-weight: bold; }
+.main-box { background-color: #4CAF50; color: white; } .backup-box { background-color: #FF9800; color: white; }
 .pyramid-container { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; background-color: #2e2e2e; border-radius: 15px; margin-top: 10px; }
 .pyramid-row { display: flex; justify-content: center; margin-bottom: 5px; }
-.pyramid-ball { width: 40px; height: 40px; line-height: 40px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #FFD700, #DAA520); color: #000; font-size: 20px; font-weight: bold; text-align: center; margin: 0 3px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); border: 2px solid #FFF; }
+.pyramid-ball { width: 40px; height: 40px; line-height: 40px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #FFD700, #DAA520); color: #000; font-size: 20px; font-weight: bold; text-align: center; margin: 0 3px; border: 2px solid #FFF; }
 .pyramid-ball.result { background: radial-gradient(circle at 30% 30%, #00FF7F, #006400); color: white; width: 60px; height: 60px; line-height: 60px; font-size: 32px; border: 3px solid #FFF; }
-.connector-line { font-size: 16px; color: #888; text-align: center; line-height: 10px; margin-bottom: 5px; }
-
-.fp-stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 15px; }
-.fp-stat-item { background-color: #222; border: 1px solid #444; border-radius: 8px; padding: 10px; text-align: center; }
-.fp-stat-label { font-size: 12px; color: #AAA; }
-.fp-stat-value { font-size: 20px; font-weight: bold; color: #FFD700; }
-
-.killer-box { background-color: #3b0000; border: 2px solid #ff4444; padding: 15px; border-radius: 10px; text-align: center; margin-bottom: 10px; }
-.killer-title { color: #ff4444; font-weight: bold; font-size: 18px; margin-bottom: 5px; }
-.killer-digit { font-size: 48px; font-weight: 900; color: #ff4444; text-shadow: 0 0 10px rgba(255,0,0,0.5); }
-.killer-stat { color: #ccc; font-size: 14px; margin-bottom: 5px; }
-.streak-badge { background-color: #ff4444; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
 </style>
 """
 
@@ -477,6 +503,153 @@ def calculate_triple_fhan_pla_detailed_stats(df):
     
     return {'Digits': next_set, 'Base': int(next_base), 'Acc_8Pos': acc_8pos, 'Acc_3Top': acc_3top, 'Acc_2Top': acc_2top, 'Acc_2Bot': acc_2bot, 'Hits_8Pos': int((hit_8pos & valid_mask).sum()), 'Total': int(total_checks)}
 
+# ---------------------------------------------------------
+# 🆕 LOGIC: 4 สูตรมหาประลัย (God Mode Logic)
+# ---------------------------------------------------------
+def get_variables_god_mode(row):
+    p1 = [int(x) for x in str(row['รางวัลที่ 1'])]
+    d2 = [int(x) for x in str(row['2 ตัวล่าง'])]
+    f1 = [int(x) for x in str(row['เลขท้าย 3 ตัว (1)'])]
+    f2 = [int(x) for x in str(row['เลขท้าย 3 ตัว (2)'])]
+    b1 = [int(x) for x in str(row['เลขท้าย 3 ตัว (3)'])]
+    b2 = [int(x) for x in str(row['เลขท้าย 3 ตัว (4)'])]
+    return p1, d2, f1, f2, b1, b2
+
+def calculate_god_formulas(p1, d2, f1, f2, b1, b2):
+    results = {}
+    
+    # 🟢 Formula 1: Lucky 50/50 -> คู่หูพารวย
+    sum_t1 = d2[0] + (f1[0]*3) + (f2[2]*2) + b1[0] + (b2[0]*2) + (b2[1]*3) + 9
+    base_t1 = sum_t1 % 10
+    tens_1 = [base_t1, (base_t1+1)%10, (base_t1+5)%10]
+    sum_u1 = (p1[2]*2) + (p1[3]*2) + p1[4] + (p1[5]*2) + b2[0] + 7
+    base_u1 = sum_u1 % 10
+    units_1 = [base_u1, (base_u1+2)%10]
+    results['F1'] = {'name': 'คู่หูพารวย (Lucky 50/50)', 'tens': tens_1, 'units': units_1, 'color': '#00FF7F'} 
+
+    # 🟡 Formula 2: Emperor's Wealth -> จักรพรรดิพารวย
+    sum_t2 = p1[1] + (p1[2]*4) + (d2[0]*3) + (f1[1]*2) + (f2[2]*2) + b1[1] + 6
+    base_t2 = sum_t2 % 10
+    tens_2 = [(base_t2+1)%10, (base_t2+3)%10, (base_t2+8)%10]
+    sum_u2 = (p1[0]*4) + (f2[0]*2) + (f2[1]*2) + (b1[0]*3) + 0
+    base_u2 = sum_u2 % 10
+    units_2 = [(base_u2+4)%10, (base_u2+8)%10]
+    results['F2'] = {'name': 'จักรพรรดิพารวย (Emperor)', 'tens': tens_2, 'units': units_2, 'color': '#FFD700'} 
+
+    # 🔴 Formula 3: God of Wealth -> มหาเทพประทานทรัพย์
+    sum_t3 = (p1[3]*4) + f1[1] + (f2[0]*4) + b1[1] + (b2[0]*3) + 4
+    base_t3 = sum_t3 % 10
+    tens_3 = [(base_t3+1)%10, (base_t3+7)%10, (base_t3+9)%10]
+    sum_u3 = (p1[3]*2) + (p1[4]*5) + (d2[1]*5) + (f1[0]*4) + f1[1] + f1[2] + (f2[0]*2) + 9
+    base_u3 = sum_u3 % 10
+    units_3 = [base_u3, (base_u3+5)%10]
+    results['F3'] = {'name': 'มหาเทพประทานทรัพย์ (God of Wealth)', 'tens': tens_3, 'units': units_3, 'color': '#FF4444'} 
+
+    # ⚫ Formula 4: The Brutal Sage -> มหาโหดโคตรเซียน
+    sum_t4 = (p1[1]*3) + (p1[4]*6) + (p1[5]*6) + (d2[1]*7) + (f1[2]*2) + (f2[2]*6) + (b1[0]*2) + 4
+    base_t4 = sum_t4 % 10
+    tens_4 = [(base_t4+3)%10, (base_t4+5)%10, (base_t4+6)%10]
+    sum_u4 = (p1[0]*4) + (p1[1]*4) + (p1[4]*4) + (p1[5]*2) + (f1[0]*7) + (f2[1]*2) + (f2[2]*3) + 0
+    base_u4 = sum_u4 % 10
+    units_4 = [base_u4, (base_u4+9)%10]
+    results['F4'] = {'name': 'มหาโหดโคตรเซียน (Brutal Sage)', 'tens': tens_4, 'units': units_4, 'color': '#AAAAAA'} 
+    
+    return results
+
+def find_consensus_god_mode(formulas_result):
+    all_pairs = []
+    for key, val in formulas_result.items():
+        for t in val['tens']:
+            for u in val['units']:
+                all_pairs.append(f"{t}{u}")
+    return Counter(all_pairs).most_common()
+
+# --- Stats Helper for 4 Formulas (20 Draws) ---
+@st.cache_data
+def calculate_formula_history_stats(df, lookback=20):
+    if len(df) < lookback + 2: return {}
+    
+    stats = {
+        'F1': {'hits': 0, 'streak': 0, 'hits_list': []}, 
+        'F2': {'hits': 0, 'streak': 0, 'hits_list': []},
+        'F3': {'hits': 0, 'streak': 0, 'hits_list': []}, 
+        'F4': {'hits': 0, 'streak': 0, 'hits_list': []}
+    }
+    
+    # Analyze last 'lookback' draws
+    start_idx = len(df) - lookback
+    
+    for i in range(start_idx, len(df)):
+        past_row = df.iloc[i-1] # input
+        target_row = df.iloc[i] # result
+        
+        # Calculate
+        pp1, pd2, pf1, pf2, pb1, pb2 = get_variables_god_mode(past_row)
+        res = calculate_god_formulas(pp1, pd2, pf1, pf2, pb1, pb2)
+        
+        real_2d = str(target_row['2 ตัวล่าง']).zfill(2)
+        real_top = str(target_row['2 ตัวบน']).zfill(2)
+        
+        for key in ['F1', 'F2', 'F3', 'F4']:
+            fval = res[key]
+            f_pairs = [f"{t}{u}" for t in fval['tens'] for u in fval['units']]
+            
+            is_hit = (real_2d in f_pairs) or (real_top in f_pairs)
+            if is_hit:
+                stats[key]['hits'] += 1
+                stats[key]['hits_list'].append(1)
+            else:
+                stats[key]['hits_list'].append(0)
+    
+    # Calculate streak
+    for key in stats:
+        h_list = stats[key]['hits_list']
+        curr_streak = 0
+        for h in reversed(h_list):
+            if h == 1: curr_streak += 1
+            else: break
+        stats[key]['streak'] = curr_streak
+        
+    return stats
+
+# --- NEW: Backtest Data Generator ---
+def get_backtest_dataframe(df, periods=20):
+    rows = []
+    if len(df) < periods + 1: return pd.DataFrame()
+
+    # Loop from latest index down
+    for i in range(len(df)-1, len(df)-1-periods, -1):
+        target_row = df.iloc[i]      
+        input_row = df.iloc[i-1]     
+
+        p1, d2, f1, f2, b1, b2 = get_variables_god_mode(input_row)
+        formulas = calculate_god_formulas(p1, d2, f1, f2, b1, b2)
+
+        real_2d = str(target_row['2 ตัวล่าง']).zfill(2)
+        real_top = str(target_row['2 ตัวบน']).zfill(2)
+
+        row_data = {
+            "งวดวันที่": target_row['วันที่'],
+            "เลขที่ออก (บน/ล่าง)": f"{real_top} / {real_2d}"
+        }
+
+        for key in ['F1', 'F2', 'F3', 'F4']:
+            f_data = formulas[key]
+            f_pairs = [f"{t}{u}" for t in f_data['tens'] for u in f_data['units']]
+            
+            hits = []
+            if real_top in f_pairs: hits.append("บน")
+            if real_2d in f_pairs: hits.append("ล่าง")
+            
+            if hits:
+                row_data[f_data['name']] = "✅ " + ",".join(hits)
+            else:
+                row_data[f_data['name']] = "❌"
+        
+        rows.append(row_data)
+    
+    return pd.DataFrame(rows)
+
 # --- Killer Scan Logic ---
 @st.cache_data
 def scan_for_killers_v2(df):
@@ -546,213 +719,186 @@ def scan_for_killers_v2(df):
 # ---------------------------------------------------------
 df = load_data()
 
-st.sidebar.title("🧭 เมนูนำทาง")
+st.sidebar.title("🐯 Lotto Master")
 # Using state to control navigation
 if 'current_page' in st.session_state:
-    # If state has a page, set the radio to that page
-    # Ensure current_page is valid
     if st.session_state.current_page in ALL_PAGES:
         idx = ALL_PAGES.index(st.session_state.current_page)
     else:
         idx = 0
-    page = st.sidebar.radio("เลือกหน้า:", ALL_PAGES, index=idx, key="sidebar_nav")
+    page = st.sidebar.radio("เลือกเมนู:", ALL_PAGES, index=idx, key="sidebar_nav")
     
-    # If the user clicks the radio, update the state
     if page != st.session_state.current_page:
         st.session_state.current_page = page
         st.rerun()
 else:
-    page = st.sidebar.radio("เลือกหน้า:", ALL_PAGES, key="sidebar_nav")
+    page = st.sidebar.radio("เลือกเมนู:", ALL_PAGES, key="sidebar_nav")
 
-st.sidebar.markdown("---")
-
-st.markdown(custom_css, unsafe_allow_html=True)
-
-# ==========================================
-# 🏠 หน้าที่ 0: Home Dashboard (NEW!)
-# ==========================================
-if page == "🏠 หน้าแรก (Dashboard)":
-    if df.empty: st.error("ไม่สามารถโหลดข้อมูลได้"); st.stop()
-    
-    last = df.iloc[-1]
-    st.markdown(f"""
-    <div class='hero-box'>
-        <div class='hero-title'>🏆 ผลรางวัลที่ 1 งวดวันที่ {last['วันที่']}</div>
-        <div class='hero-number'>{last['รางวัลที่ 1']}</div>
-        <div class='hero-sub'>
-            เลขท้าย 2 ตัว: <b>{last['2 ตัวล่าง']}</b> | 2 ตัวบน: <b>{last['2 ตัวบน']}</b>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+# ---- SIDEBAR STATS (MOVED HERE) ----
+if not df.empty:
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("🔥 สถิติฮิตตลอดกาล")
     
     top2_counts = df['2 ตัวบน'].value_counts().head(3)
     bot2_counts = df['2 ตัวล่าง'].value_counts().head(3)
     
-    # 2. Killer Stats (Scan Best Top & Bot)
+    c_side1, c_side2 = st.sidebar.columns(2)
+    with c_side1:
+        st.markdown(f"""
+        <div class="sidebar-stat-box">
+            <div class="sidebar-stat-label">บนฮิตสุด</div>
+            <div class="sidebar-stat-num">{top2_counts.index[0]}</div>
+            <div style="font-size:10px; color:#888;">รอง: {top2_counts.index[1]}</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with c_side2:
+        st.markdown(f"""
+        <div class="sidebar-stat-box">
+            <div class="sidebar-stat-label">ล่างฮิตสุด</div>
+            <div class="sidebar-stat-num">{bot2_counts.index[0]}</div>
+            <div style="font-size:10px; color:#888;">รอง: {bot2_counts.index[1]}</div>
+        </div>
+        """, unsafe_allow_html=True)
+# -----------------------------------
+
+st.markdown(custom_css, unsafe_allow_html=True)
+
+# ==========================================
+# 🏠 หน้าที่ 0: หน้าแรก (4 สูตรมหาประลัย)
+# ==========================================
+if page == "🏠 หน้าแรก (4 สูตรมหาประลัย)":
+    if df.empty: st.error("ไม่สามารถโหลดข้อมูลได้"); st.stop()
+    
+    last_row = df.iloc[-1]
+    
+    # 1. Hero Section (Premium Gold)
+    st.markdown(f"""
+    <div class='hero-container'>
+        <div class='hero-title'>รางวัลที่ 1 งวดวันที่ {last_row['วันที่']}</div>
+        <div class='hero-number'>{last_row['รางวัลที่ 1']}</div>
+        <div class='hero-sub-grid'>
+            <div class='hero-sub-item'>
+                <div class='hero-sub-label'>เลขหน้า 3 ตัว</div>
+                <div class='hero-sub-val'>{last_row['เลขท้าย 3 ตัว (1)']} | {last_row['เลขท้าย 3 ตัว (2)']}</div>
+            </div>
+            <div class='hero-sub-item'>
+                <div class='hero-sub-label'>เลขท้าย 3 ตัว</div>
+                <div class='hero-sub-val'>{last_row['เลขท้าย 3 ตัว (3)']} | {last_row['เลขท้าย 3 ตัว (4)']}</div>
+            </div>
+            <div class='hero-sub-item'>
+                <div class='hero-sub-label'>2 ตัวล่าง</div>
+                <div class='hero-sub-val' style='color:#FFD700;'>{last_row['2 ตัวล่าง']}</div>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.divider()
+    
+    # 2. Section A: 4 สูตรมหาประลัย & Killer
+    
+    # คำนวณสูตร
+    p1, d2, f1, f2, b1, b2 = get_variables_god_mode(last_row)
+    formulas = calculate_god_formulas(p1, d2, f1, f2, b1, b2)
+    consensus = find_consensus_god_mode(formulas)
+    
+    # คำนวณ Stats ย้อนหลัง 20 งวด
+    f_stats = calculate_formula_history_stats(df, lookback=20)
+    
+    top_pick = consensus[0] if consensus else ("--", 0)
+    
+    # Killer Logic
     killer_df = scan_for_killers_v2(df)
-    
+    dead_top3 = "-"; dead_top2 = "-"; dead_bot2 = "-"
     if not killer_df.empty:
-        best_top = killer_df.sort_values('Acc_Top3', ascending=False).iloc[0]
-        best_bot = killer_df.sort_values('Acc_Bot2', ascending=False).iloc[0]
-        dead_top_msg = f"{best_top['Next_Dead']} ({best_top['Acc_Top3']:.0f}%)"
-        dead_bot_msg = f"{best_bot['Next_Dead']} ({best_bot['Acc_Bot2']:.0f}%)"
-    else:
-        dead_top_msg = "-"
-        dead_bot_msg = "-"
+        best_t3 = killer_df.sort_values('Acc_Top3', ascending=False).iloc[0]
+        best_t2 = killer_df.sort_values('Acc_Top2', ascending=False).iloc[0]
+        best_b2 = killer_df.sort_values('Acc_Bot2', ascending=False).iloc[0]
+        dead_top3 = f"{best_t3['Next_Dead']}"
+        dead_top2 = f"{best_t2['Next_Dead']}"
+        dead_bot2 = f"{best_b2['Next_Dead']}"
     
-    c1, c2, c3 = st.columns(3)
-    with c1:
+    # Layout: Left (Consensus), Center (Formulas), Right (Killer)
+    col_con, col_form, col_kill = st.columns([1.5, 3, 1.5])
+    
+    with col_con:
         st.markdown(f"""
-        <div class='stat-grid-box'>
-            <div class='grid-title'>🔥 2 ตัวบน ฮิตตลอดกาล</div>
-            <div class='grid-val-big'>{top2_counts.index[0]}</div>
-            <div class='grid-val-sub'>รอง: {top2_counts.index[1]}, {top2_counts.index[2]}</div>
+        <div class="consensus-box">
+            <div class="consensus-title">🔥 เลขชนแรงสุด</div>
+            <div class="consensus-number">{top_pick[0]}</div>
+            <div style="color:#ccc;">ชนกัน {top_pick[1]} สูตร</div>
+            <hr style="border-color:#550000; width:50%; margin: 15px auto;">
+            <div style="color:#ff8888; font-size:12px;">คำเตือน: โปรดใช้วิจารณญาณ</div>
         </div>
         """, unsafe_allow_html=True)
-    with c2:
-        st.markdown(f"""
-        <div class='stat-grid-box'>
-            <div class='grid-title'>🔥 2 ตัวล่าง ฮิตตลอดกาล</div>
-            <div class='grid-val-big'>{bot2_counts.index[0]}</div>
-            <div class='grid-val-sub'>รอง: {bot2_counts.index[1]}, {bot2_counts.index[2]}</div>
-        </div>
-        """, unsafe_allow_html=True)
-    with c3:
-        st.markdown(f"""
-        <div class='stat-grid-box' style='border-color: #ff4444; background-color: #3b0000;'>
-            <div class='grid-title' style='color: #ff4444;'>💀 เลขดับพญายม (แม่นสุด)</div>
-            <div class='grid-val-big' style='color: #ff4444;'>บน {dead_top_msg}</div>
-            <div class='grid-val-sub' style='color: #ffaaaa;'>ล่าง {dead_bot_msg}</div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-    st.divider()
-    
-    # --- AI Lucky Numbers (NEW) ---
-    st.subheader("🤖 AI จัดให้ (เลขตัวยืน x ปลอดภัยไร้ดับ)")
-    
-    # 1. Get Standing Digits
-    st_digits, _, _, _, _, _, _ = calculate_four_standing_digits(df)
-    
-    # 2. Get Killers (Top 1 from T3, T2, B2)
-    killers = set()
-    if not killer_df.empty:
-        k1 = killer_df.sort_values('Acc_Top3', ascending=False).iloc[0]['Next_Dead']
-        k2 = killer_df.sort_values('Acc_Top2', ascending=False).iloc[0]['Next_Dead']
-        k3 = killer_df.sort_values('Acc_Bot2', ascending=False).iloc[0]['Next_Dead']
-        killers = {int(k1), int(k2), int(k3)}
-    
-    # 3. Generate Pool
-    valid_pairs = []
-    for i in range(100):
-        s_num = str(i).zfill(2)
-        d1, d2 = int(s_num[0]), int(s_num[1])
-        
-        # Condition: At least one Standing AND No Killers
-        has_standing = (d1 in st_digits) or (d2 in st_digits)
-        has_killer = (d1 in killers) or (d2 in killers)
-        
-        if has_standing and not has_killer:
-            valid_pairs.append(s_num)
-            
-    # 4. Select 6
-    if len(valid_pairs) >= 6:
-        ai_picks = random.sample(valid_pairs, 6)
-    else:
-        ai_picks = valid_pairs # Fallback if filters are too strict
-        
-    # 5. Display
-    st.markdown("<div class='ai-pick-container'>", unsafe_allow_html=True)
-    cols = st.columns(6)
-    for i, p in enumerate(ai_picks):
-        with cols[i]:
-            st.markdown(f"<div class='ai-pick-item'>{p}</div>", unsafe_allow_html=True)
-    st.markdown("</div>", unsafe_allow_html=True)
-    st.caption(f"คัดจาก {len(valid_pairs)} คู่ที่ผ่านเกณฑ์ (มีตัวยืน {st_digits} และไม่มีเลขดับ {killers})")
-    
-    st.divider()
-    
-    # --- Leaderboard ---
-    st.subheader("📊 อันดับสูตรแม่นยำ (กดปุ่มเพื่อดูสูตร)")
-    
-    pyr_data = calculate_pyramid_detailed_stats(df)
-    acc_pyr = pyr_data['Acc_8Pos']
-    
-    fp_data = calculate_triple_fhan_pla_detailed_stats(df)
-    acc_fp = fp_data['Acc_8Pos']
-    
-    _, acc_st4, _, _, _, _, _ = calculate_four_standing_digits(df)
-    
-    ranks = [
-        ("สูตรฟันปลา 3 ตัว", acc_fp, "🎣 สูตรฟันปลา & สามเหลี่ยม"),
-        ("สูตรสี่ตัวยืน", acc_st4, "🎯 สี่ตัวยืน (89.28%)"),
-        ("สูตรสามเหลี่ยมทองคำ", acc_pyr, "🎣 สูตรฟันปลา & สามเหลี่ยม")
-    ]
-    ranks.sort(key=lambda x: x[1], reverse=True)
-    
-    for i, (name, acc, target_page) in enumerate(ranks):
-        c_rank, c_name, c_btn = st.columns([1, 4, 2])
-        with c_rank: st.markdown(f"<div style='font-size:20px; font-weight:bold;'>#{i+1}</div>", unsafe_allow_html=True)
-        with c_name: st.markdown(f"<div style='font-size:18px;'>{name} <span style='color:#00FF7F; font-weight:bold;'>({acc:.2f}%)</span></div>", unsafe_allow_html=True)
-        with c_btn:
-            if st.button(f"👉 ไปดูสูตร", key=f"go_btn_{i}"):
-                navigate_to(target_page)
-        st.markdown("<hr style='margin: 5px 0;'>", unsafe_allow_html=True)
-        
-    st.info("💡 หรือไปที่เมนู '💀 โซนเลขดับ' เพื่อสแกนหาเลขดับที่แม่นยำที่สุด (>95%)")
 
-# ... (PAGES 1-7 remain the same full code as before) ...
-# ==========================================
-# 🏠 หน้าที่ 1: ตรวจหวย 
-# ==========================================
-elif page == "🏠 ตรวจหวย":
-    st.title("🎰 ตรวจผลสลากกินแบ่งรัฐบาล")
-    if not df.empty:
-        latest = df.iloc[-1]
-        with st.container():
-            st.markdown("### 🔍 ตรวจปุ๊บ รู้ปั๊บ (งวดล่าสุด)")
-            c_check1, c_check2 = st.columns([3, 1])
-            with c_check1:
-                user_check = st.text_input("พิมพ์เลขลอตเตอรี่ของคุณ (6 ตัว หรือ 2-3 ตัว)", max_chars=6, placeholder="เช่น 123456 หรือ 252")
-            with c_check2:
-                st.write(""); st.write("")
-                check_btn = st.button("กดตรวจรางวัล", type="primary", use_container_width=True, key="check_btn_home")
-            
-            if st.session_state.get('check_btn_home', 0) > 0 and user_check:
-                win_msg = []; user_check = user_check.strip()
-                if user_check == latest['รางวัลที่ 1']: win_msg.append(f"🏆 สุดยอด!! คุณถูกรางวัลที่ 1 ({latest['รางวัลที่ 1']})")
-                if len(user_check) == 3 and latest['รางวัลที่ 1'].endswith(user_check): win_msg.append(f"🔥 ยินดีด้วย! คุณถูก '3 ตัวบน' ({user_check})")
-                if len(user_check) == 2 and latest['รางวัลที่ 1'].endswith(user_check): win_msg.append(f"🔥 ยินดีด้วย! คุณถูก '2 ตัวบน' ({user_check})")
-                if len(user_check) == 2 and user_check == latest['2 ตัวล่าง']: win_msg.append(f"💰 เฮงๆ! ถูก 'เลขท้าย 2 ตัวล่าง' ({latest['2 ตัวล่าง']})")
-                three_digits = [latest['เลขท้าย 3 ตัว (1)'], latest['เลขท้าย 3 ตัว (2)'], latest['เลขท้าย 3 ตัว (3)'], latest['เลขท้าย 3 ตัว (4)']]
-                if len(user_check) == 3 and user_check in three_digits: win_msg.append(f"🎁 ถูกรางวัล 'เลขหน้า/เลขท้าย 3 ตัว' (หมุน 4 ครั้ง)")
-                elif len(user_check) == 6 and (user_check[:3] in three_digits or user_check[-3:] in three_digits): win_msg.append(f"🎁 ถูกรางวัล 'เลขหน้า/เลขท้าย 3 ตัว' (จากเลขลอตเตอรี่)")
-                try: 
-                    if user_check in [str(int(latest['รางวัลที่ 1'])-1).zfill(6), str(int(latest['รางวัลที่ 1'])+1).zfill(6)]: win_msg.append(f"😲 เกือบไป! คุณถูกรางวัลข้างเคียงรางวัลที่ 1")
-                except: pass
-                if win_msg: st.success("\n\n".join(win_msg)); st.balloons()
-                else: st.error(f"เสียใจด้วย เลข {user_check} ไม่ถูกรางวัลในหมวดใดๆ... งวดหน้าเอาใหม่!")
-            
-            if st.session_state.get('check_btn_home', 0) > 0 and not user_check: st.warning("กรุณากรอกตัวเลขที่ต้องการตรวจ")
+    with col_form:
+        st.markdown("### ✨ 4 สูตรมหาประลัย (New Gen)")
+        c_f1, c_f2 = st.columns(2)
+        cols_ref = [c_f1, c_f2]
+        
+        items = list(formulas.items())
+        for i in range(0, 4, 2): # Row loop
+            with c_f1:
+                key, val = items[i]
+                stats = f_stats.get(key, {'hits':0, 'streak':0})
+                tens_badges = "".join([f"<span class='f-val-badge'>{x}</span>" for x in val['tens']])
+                units_badges = "".join([f"<span class='f-val-badge'>{x}</span>" for x in val['units']])
+                st.markdown(f"""
+                <div class="formula-card-home" style="border-left: 4px solid {val['color']};">
+                    <div class="f-header">
+                        <div class="f-title" style="color:{val['color']}; border:none; margin:0;">{val['name']}</div>
+                        <div class="f-stats-badge">เข้า {stats['hits']}/20 | ติดกัน {stats['streak']} งวด</div>
+                    </div>
+                    <div class="f-row"><span class="f-label">หลักสิบ:</span> {tens_badges}</div>
+                    <div class="f-row"><span class="f-label">หลักหน่วย:</span> {units_badges}</div>
+                    <div class="f-pair-box">{", ".join([f"{t}{u}" for t in val['tens'] for u in val['units']])}</div>
+                </div>
+                """, unsafe_allow_html=True)
+                
+            with c_f2:
+                key, val = items[i+1]
+                stats = f_stats.get(key, {'hits':0, 'streak':0})
+                tens_badges = "".join([f"<span class='f-val-badge'>{x}</span>" for x in val['tens']])
+                units_badges = "".join([f"<span class='f-val-badge'>{x}</span>" for x in val['units']])
+                st.markdown(f"""
+                <div class="formula-card-home" style="border-left: 4px solid {val['color']};">
+                    <div class="f-header">
+                        <div class="f-title" style="color:{val['color']}; border:none; margin:0;">{val['name']}</div>
+                        <div class="f-stats-badge">เข้า {stats['hits']}/20 | ติดกัน {stats['streak']} งวด</div>
+                    </div>
+                    <div class="f-row"><span class="f-label">หลักสิบ:</span> {tens_badges}</div>
+                    <div class="f-row"><span class="f-label">หลักหน่วย:</span> {units_badges}</div>
+                    <div class="f-pair-box">{", ".join([f"{t}{u}" for t in val['tens'] for u in val['units']])}</div>
+                </div>
+                """, unsafe_allow_html=True)
 
-        st.divider()
-        st.markdown(f"📅 งวดประจำวันที่: **{latest['วันที่']}**")
-        st.markdown(f"<div class='prize-1-box'><div class='prize-1-title'>🏆 รางวัลที่ 1</div><div class='prize-1-number'>{latest['รางวัลที่ 1']}</div></div>", unsafe_allow_html=True)
-        try:
-            p1 = int(latest['รางวัลที่ 1']); s1, s2 = str(p1-1).zfill(6), str(p1+1).zfill(6)
-            c_s1, c_s2 = st.columns(2)
-            with c_s1: st.markdown(f"<div class='side-prize-box'>รางวัลข้างเคียง<br><b>{s1}</b></div>", unsafe_allow_html=True)
-            with c_s2: st.markdown(f"<div class='side-prize-box'>รางวัลข้างเคียง<br><b>{s2}</b></div>", unsafe_allow_html=True)
-        except: pass
-        st.write("") 
-        c1, c2 = st.columns(2)
-        with c1: st.markdown(f"<div class='prize-2-digit'><div class='digit-title'>👆 เลขท้าย 2 ตัวบน</div><div class='digit-number'>{latest['2 ตัวบน']}</div></div>", unsafe_allow_html=True)
-        with c2: st.markdown(f"<div class='prize-2-bottom'><div class='digit-title'>👇 เลขท้าย 2 ตัวล่าง</div><div class='digit-number'>{latest['2 ตัวล่าง']}</div></div>", unsafe_allow_html=True)
-        st.write(""); st.subheader("⚡ เลขหน้า / เลขท้าย 3 ตัว")
-        cols = st.columns(4)
-        for i, c in enumerate(cols):
-            with c: val = latest[f'เลขท้าย 3 ตัว ({i+1})']; st.markdown(f"<div class='prize-3-box'>{val}</div>", unsafe_allow_html=True)
-        with st.expander("📜 ดูผลสลากย้อนหลัง"): st.dataframe(df.iloc[::-1][['วันที่', 'รางวัลที่ 1', '2 ตัวล่าง']], use_container_width=True)
+    with col_kill:
+        st.markdown(f"""
+        <div class="killer-container">
+            <div>
+                <div class="killer-main-title">💀 ดับบน (3 ตัวแม่นๆ)</div>
+                <div class="killer-main-digit">{dead_top3}</div>
+            </div>
+            <div class="killer-sub-grid">
+                <div class="killer-sub-item">
+                    <div class="killer-sub-lbl">ดับบน (2 ตัว)</div>
+                    <div class="killer-sub-val">{dead_top2}</div>
+                </div>
+                <div class="killer-sub-item">
+                    <div class="killer-sub-lbl">ดับล่าง (2 ตัว)</div>
+                    <div class="killer-sub-val">{dead_bot2}</div>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.divider()
+
+    # 3. Section C: New Backtest Table (Moved here)
+    with st.expander("📊 เช็คผลงาน 4 สูตรย้อนหลัง (Backtest)", expanded=False):
+        bt_df = get_backtest_dataframe(df)
+        st.dataframe(bt_df, use_container_width=True, hide_index=True)
 
 # ==========================================
 # 🔍 หน้าที่ 2: นักสืบตัวเลข (Sherlock Full)
@@ -812,6 +958,11 @@ elif page == "🔍 นักสืบตัวเลข":
             with tab2: show_detective_result("สถิติ 3 ตัวหน้า/ล่าง", df, '3_bottom_mixed', search_num)
         else: st.error("กรุณากรอกตัวเลข 2 หรือ 3 หลักเท่านั้นครับ")
     elif st.session_state.get('search_btn_detective', 0) > 0: st.error("กรุณากรอกตัวเลขที่ต้องการสืบ")
+    
+    st.divider()
+    # --- Moved History Data Here ---
+    with st.expander("📂 ฐานข้อมูลผลรางวัลย้อนหลัง (Full Database)", expanded=False):
+        st.dataframe(df.iloc[::-1][['วันที่', 'รางวัลที่ 1', '2 ตัวล่าง', 'เลขท้าย 3 ตัว (1)', 'เลขท้าย 3 ตัว (2)', 'เลขท้าย 3 ตัว (3)', 'เลขท้าย 3 ตัว (4)']], use_container_width=True)
 
 # ==========================================
 # 🧬 หน้าที่ 3: สูตรลับ 5 ชั้น (AI Spin)
@@ -921,33 +1072,6 @@ elif page == "🧬 สูตรลับ 5 ชั้น (AI Spin)":
     else: st.info("👈 กดปุ่ม 'เริ่มคำนวณสูตร' ด้านบนเพื่อเริ่มกระบวนการ")
 
 # ==========================================
-# 🎯 หน้าที่ 4: สี่ตัวยืน (89.28%)
-# ==========================================
-elif page == "🎯 สี่ตัวยืน (89.28%)":
-    st.title("🎯 สี่ตัวยืน (89.28%)")
-    st.caption("สูตรสังเคราะห์คะแนนรวมจาก 4 ตำแหน่งหลัก พร้อมการถ่วงน้ำหนักตามแกน (The Four Standing Digits)")
-    if df.empty: st.error("❌ ไม่สามารถโหลดข้อมูลสถิติได้"); st.stop()
-    four_standing_digits, calculated_accuracy, total_hits, total_checks, backtest_df, current_streak, max_streak = calculate_four_standing_digits(df)
-    digits_str = ", ".join(map(str, four_standing_digits))
-    st.markdown("## 👑 ชุดตัวเลขยืนสำหรับงวดถัดไป")
-    st.markdown("---")
-    col_1, col_2 = st.columns(2)
-    with col_1: st.markdown(f"<div class='standing-digits'><div style='font-size: 24px; font-weight: bold; color: white;'>⭐ สี่ตัวยืน ⭐</div><div class='digits-display'>[{digits_str}]</div></div>", unsafe_allow_html=True)
-    with col_2:
-        st.metric("Hit Rate (Total)", f"{calculated_accuracy:.2f}%", f"({total_hits} Hits จาก {total_checks} งวด)")
-        st.metric("เข้าติดต่อกันสูงสุด", f"{max_streak} งวด", delta=f"ปัจจุบัน {current_streak} งวด")
-    st.success(f"💡 **โอกาสเข้า 89.28%:** หมายความว่า เลข 2 ตัวบน หรือ 2 ตัวล่าง มีโอกาสสูงมากที่จะมีเลขใดเลขหนึ่งใน [{digits_str}] อยู่ด้วย")
-    st.divider()
-    st.subheader("📜 ประวัติการเข้า/หลุด 30 งวดล่าสุด")
-    st.markdown(f"ชุดเลขยืน **[{digits_str}]**")
-    st.dataframe(backtest_df.tail(30).iloc[::-1], use_container_width=True, hide_index=True)
-    st.divider(); st.subheader("⚙️ คำอธิบาย Logic การคำนวณ")
-    st.markdown("""สูตรนี้ใช้หลักการ **สังเคราะห์คะแนนรวม (Combined Score)** จากข้อมูลย้อนหลัง:
-    1.  **คะแนนความถี่ (Base Score):** วิเคราะห์ความถี่ของเลขโดดในตำแหน่ง สิบบน (TT), หน่วยบน (UT), สิบล่าง (TB), หน่วยล่าง (UB)
-    2.  **การถ่วงน้ำหนัก (Axis Weighting):** เพิ่มน้ำหนัก 5% ให้กับเลขที่เคยปรากฏใน "แกนหลัก" (เช่น หลักแสน, หน่วย ร.1) ในงวดที่ผ่านมา
-    3.  **คัดเลือก:** เลือก 4 ตัวเลขที่มีคะแนนรวมสูงสุดจากทั้ง 4 ตำแหน่งที่วิเคราะห์""")
-
-# ==========================================
 # 💖 หน้าที่ 5: รวมสูตรน้องพารวย
 # ==========================================
 elif page == "💖 รวมสูตรน้องพารวย":
@@ -970,7 +1094,10 @@ elif page == "💖 รวมสูตรน้องพารวย":
         st.metric("ความต่อเนื่อง", f"{max_streak_run} งวด", delta=f"ปัจจุบัน {current_streak_run} งวด")
     with col_run_2:
         st.subheader("รายละเอียดเชิงลึก")
-        st.info(f"💡 **สูตรวิ่งหลัก:** นี่คือสูตรสี่ตัวยืนที่มีความแม่นยำสูงถึง **{calculated_accuracy_run:.2f}%**\n\nโปรดไปที่หน้า **'🎯 สี่ตัวยืน'** เพื่อดูรายละเอียด")
+        st.info(f"💡 **สูตรวิ่งหลัก:** นี่คือสูตรสี่ตัวยืนที่มีความแม่นยำสูงถึง **{calculated_accuracy_run:.2f}%**")
+        # --- ย้ายประวัติมาไว้ตรงนี้ ---
+        with st.expander("📜 ดูประวัติการเข้า/หลุด 30 งวดล่าสุด (Backtest)", expanded=False):
+            st.dataframe(backtest_df_run.tail(30).iloc[::-1], use_container_width=True, hide_index=True)
     
     st.markdown("---"); st.markdown("## 🌌 สูตร 2: วงจรประสานจักรวาล (SVD)"); st.markdown("---")
     col_1, col_2, col_3 = st.columns([1.5, 1, 2])
